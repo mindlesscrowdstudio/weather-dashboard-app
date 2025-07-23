@@ -97,7 +97,7 @@ describe('Favorites endpoints', () => {
   beforeEach(() => {
     weatherController._resetState();
   });
-  
+
   it('POST /favorites - should return 201 and a success message when adding a valid city', async () => {
     const newFavorite = { city: 'Tokyo' };
     const response = await request(app)
@@ -121,6 +121,26 @@ describe('Favorites endpoints', () => {
     expect(response.body.favorites).toContain('Tokyo');
 
   });
+  // In backend/tests/weather.test.ts, inside the 'Favorites endpoints' describe block
 
+  it('DELETE /favorites/:id - should remove a city from the favorites list using its ID', async () => {
+
+    const postResponse = await request(app)
+    .post('/api/weather/favorites')
+    .send({ city_name: 'Tokyo', country_code: 'JP'});
+
+    const newFavoriteId = postResponse.body.id; 
+    expect(newFavoriteId).toBeDefined();
+
+    const deleteResponse = await request(app)
+      .delete(`/api/weather/favorites/${newFavoriteId}`);
+    
+    expect(deleteResponse.status).toBe(200);
+    expect(deleteResponse.body).toEqual({
+      message: 'Favorite removed successfully',
+      id: newFavoriteId,
+    });
+  });
 });
+
 
