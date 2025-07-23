@@ -3,37 +3,48 @@ import app from '../src/app';
 
 global.fetch = jest.fn();
 
+beforeEach(() => {
+  // clears any previous mock implementations and call history.
+  (fetch as jest.Mock).mockClear();
+});
+
 //Cycle 1
 describe('GET /api/weather/current/:city', () => {
   it('should return 404 if the city is NOT found', async () => {
     // We'll need to mock the fetch API later to simulate this
+    (fetch as jest.Mock).mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: () => Promise.resolve({ message: 'city not found' }),
+    });
+
     const response = await request(app)
-      .get('/api/weather/current/unexistencedcity');
+      .get('/api/weather/current/Narnia');
     expect(response.status).toBe(404);
-    expect(response.body).toHaveProperty('message', 'Sorry, City not found');
-  });
-});
-
-//Cycle 2
-it('should return 200 and weather data for a valid city', async () => {
-  // Mock the API from the OpenWeatherMap
-  const mockWeatherData = {
-    name: 'Seul',
-    main: { temp: 20, humidity: 50 },
-    weather: [{ description: 'clear sky' }],
-    wind: { speed: 5 },
-  };
-  (fetch as jest.Mock).mockResolvedValue({
-    ok: true,
-    json: () => Promise.resolve(mockWeatherData),
+    expect(response.body).toHaveProperty('message', 'city not found');
   });
 
-  const response = await request(app)
-    .get('/api/weather/current/Seul');
-  expect(response.status).toBe(200);
-  expect(response.body).toEqual(mockWeatherData)
+  it('should return 200 and weather data for a valid city', async () => {
+      // Mock the API from the OpenWeatherMap
+      const mockWeatherData = {
+        name: 'Seul',
+        main: { temp: 20, humidity: 50 },
+        weather: [{ description: 'clear sky' }],
+        wind: { speed: 5 },
+      };
+    (fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockWeatherData),
+    });
 
+    const response = await request(app)
+      .get('/api/weather/current/Seul');
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(mockWeatherData)
+
+    });
 });
+
 
 //PENDING:
 // caching and database integration TESTS
@@ -53,10 +64,7 @@ describe('GET /api/weather/forecast/:city', () => {
       ok: true,
       json: () => Promise.resolve(mockForecastData),
     });
-
-    //Make the API request to the endpoint that doesn't exist yet
     const response = await request(app).get('/api/weather/forecast/Seul');
-
     
     expect(response.status).toBe(200);
     expect(response.body).toEqual(mockForecastData);
@@ -69,6 +77,7 @@ describe('GET /api/weather/forecast/:city', () => {
     // Mock the fetch API 
     (fetch as jest.Mock).mockResolvedValue({
       ok: false,
+      status: 404,
       json: () => Promise.resolve(mockErrorResponse),
     });
 
