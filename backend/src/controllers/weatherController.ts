@@ -4,6 +4,10 @@ import {Request, Response } from 'express';
 const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY;
 
 export class WeatherController {
+
+  private favorites: string[] = [];
+
+//  Implementing the current endpoint
   async getCurrentWeather(req: Request, res: Response) {
     try {
       const { city } = req.params;
@@ -24,7 +28,7 @@ export class WeatherController {
       res.status(500).json({ message: 'Internal Server Error' });
     }
   }
-  // Cycle 2: Implementing the forecast endpoint
+  //  Implementing the forecast endpoint
   async getForecast(req: Request, res: Response) {
     try {
       const { city } = req.params;
@@ -57,6 +61,18 @@ export class WeatherController {
         message: 'Internal server error',
       });
     }
+  }
+  // Implementing the addFavorite endpoint
+  async addFavorite(req: Request, res: Response) {
+    
+      const { city } = req.body;
+
+      // TODO: save the favorite city to a database
+      // For now, we will just return a success message
+      res.status(201).json({ 
+        message: 'City added to favorites',
+        city: city,
+      });
   }
 }
 

@@ -98,10 +98,10 @@ describe('POST /api/weather/favorites', () => {
       .post('/api/weather/favorites')
       .send(newFavorite); //NOTE: .send() is used to include a request body
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(201);
     expect(response.body).toEqual({
       message: 'City added to favorites',
-      city: 'Tokyo',
+      city: 'Ushuaia',
     });
   });
 });
