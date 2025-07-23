@@ -64,4 +64,19 @@ describe('GET /api/weather/forecast/:city', () => {
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/data/2.5/forecast?q=Seul'));
   });
 
+  it('should return 404 if the city is NOT found', async () => {
+    const mockErrorResponse =  { message: 'city not found' };
+    // Mock the fetch API 
+    (fetch as jest.Mock).mockResolvedValue({
+      ok: false,
+      json: () => Promise.resolve(mockErrorResponse),
+    });
+
+    const response = await request(app)
+      .get('/api/weather/forecast/Narnia');
+    expect(response.status).toBe(404);
+    expect(response.body).toHaveProperty('message', 'city not found');
+  });
+
 });
+

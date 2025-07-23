@@ -38,6 +38,7 @@ export class WeatherController {
 
       if(!apiResponse.ok) {
         // change messafge to differ from current weather
+        // defensive code
         return res.status(404).json({ message: 'city not found' });
       }
       const forecastData = await apiResponse.json();
