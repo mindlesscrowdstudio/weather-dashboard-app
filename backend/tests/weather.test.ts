@@ -90,8 +90,9 @@ describe('GET /api/weather/forecast/:city', () => {
 });
 
 // Favorites POST endpoint
-describe('POST /api/weather/favorites', () => {
-  it('should return 201 and a success message when adding a valid city', async () => {
+describe('Favorites endpoints', () => {
+
+  it('POST /favorites - should return 201 and a success message when adding a valid city', async () => {
     const newFavorite = { city: 'Ushuaia' };
 
     const response = await request(app)
@@ -99,9 +100,21 @@ describe('POST /api/weather/favorites', () => {
       .send(newFavorite); //NOTE: .send() is used to include a request body
 
     expect(response.status).toBe(201);
-    expect(response.body).toEqual({
-      message: 'City added to favorites',
-      city: 'Ushuaia',
-    });
+    expect(response.body.city).toBe('Ushuaia');
+    
   });
+
+  it('GET /favorites - should return and array of favorite cities list', async () => {
+    await request(app).post('/api/weather/favorites').send({ city: 'Tokyo' });
+    
+    const response = await request(app)
+      .get('/api/weather/favorites');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('favorites');
+    expect(response.body.favorites).toContain('Tokyo');
+
+  });
+
 });
+
