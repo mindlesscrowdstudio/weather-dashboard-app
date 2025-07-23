@@ -63,18 +63,26 @@ export class WeatherController {
     }
   }
   // Implementing the addFavorite endpoint
-  async addFavorite(req: Request, res: Response) {
-    
-      const { city } = req.body;
+  public addFavorite = async (req: Request, res: Response) => {
+    const { city } = req.body;
 
-      // TODO: save the favorite city to a database
-      // For now, we will just return a success message
-      res.status(201).json({ 
-        message: 'City added to favorites',
-        city: city,
-      });
+    if (city && !this.favorites.includes(city)) {
+      this.favorites.push(city);
+    }
+    res.status(201).json({ 
+      message: 'City added to favorites',
+      city: city,
+    });
+  }
+
+  public getFavorites = async (req: Request, res: Response) => {
+    res.status(200).json({
+      favorites: this.favorites,
+    });
+  }
+  public _resetState() {
+    this.favorites = [];
   }
 }
-
 
 export const weatherController = new WeatherController();
