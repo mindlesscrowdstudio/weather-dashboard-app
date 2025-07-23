@@ -35,3 +35,33 @@ it('should return 200 and weather data for a valid city', async () => {
 
 });
 
+//PENDING:
+// caching and database integration TESTS
+
+describe('GET /api/weather/forecast/:city', () => {
+  it('should return 200 and forecast data for a valid city', async () => {
+    // Mock the API response for the forecast endpoint day 1 and 2
+    const mockForecastData = {
+      list: [
+        { dt: 1661871600, main: { temp: 22.8 } }, 
+        { dt: 1661958000, main: { temp: 21.5 } }, 
+      ],
+      city: { name: 'Seul' },
+    };
+
+    (fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockForecastData),
+    });
+
+    //Make the API request to the endpoint that doesn't exist yet
+    const response = await request(app).get('/api/weather/forecast/Seul');
+
+    
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(mockForecastData);
+    
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/data/2.5/forecast?q=Seul'));
+  });
+
+});
