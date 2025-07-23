@@ -18,7 +18,7 @@ describe('GET /api/weather/current/:city', () => {
 it('should return 200 and weather data for a valid city', async () => {
   // Mock the API from the OpenWeatherMap
   const mockWeatherData = {
-    name: 'Mexico City',
+    name: 'Seul',
     main: { temp: 20, humidity: 50 },
     weather: [{ description: 'clear sky' }],
     wind: { speed: 5 },
@@ -29,7 +29,7 @@ it('should return 200 and weather data for a valid city', async () => {
   });
 
   const response = await request(app)
-    .get('/api/weather/current/Mexico City');
+    .get('/api/weather/current/Seul');
   expect(response.status).toBe(200);
   expect(response.body).toEqual(mockWeatherData)
 
