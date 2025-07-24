@@ -7,5 +7,6 @@ router.get('/current/:city', weatherController.getCurrentWeather);
 router.get('/forecast/:city', weatherController.getForecast);
 router.post('/favorites', weatherController.addFavorite);
 router.get('/favorites', weatherController.getFavorites);
+router.delete('/favorites/:id', weatherController.deleteFavorite);
 
 export default router;

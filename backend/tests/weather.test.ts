@@ -1,32 +1,20 @@
 import request from 'supertest';
 import app from '../src/app';
+import { weatherService } from '../src/services/weatherService';
 import { weatherController } from '../src/controllers/weatherController';
+//PENDING:
+// caching and database integration TESTS
 
-global.fetch = jest.fn();
-
+jest.mock('../src/services/weatherService');
+const mockedWeatherService = weatherService as jest.Mocked<typeof weatherService>;
+const mockNotFoundError = { status: 404, message: 'city not found' };
+// Reset the state before each test
 beforeEach(() => {
-  // clears any previous mock implementations and call history.
-  (fetch as jest.Mock).mockClear();
-  //reset
+  jest.clearAllMocks();
   weatherController._resetState();
 });
 
-//Cycle 1
 describe('GET /api/weather/current/:city', () => {
-  it('should return 404 if the city is NOT found', async () => {
-    // We'll need to mock the fetch API later to simulate this
-    (fetch as jest.Mock).mockResolvedValue({
-      ok: false,
-      status: 404,
-      json: () => Promise.resolve({ message: 'city not found' }),
-    });
-
-    const response = await request(app)
-      .get('/api/weather/current/Narnia');
-    expect(response.status).toBe(404);
-    expect(response.body).toHaveProperty('message', 'city not found');
-  });
-
   it('should return 200 and weather data for a valid city', async () => {
       // Mock the API from the OpenWeatherMap
       const mockWeatherData = {
@@ -35,22 +23,26 @@ describe('GET /api/weather/current/:city', () => {
         weather: [{ description: 'clear sky' }],
         wind: { speed: 5 },
       };
-    (fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockWeatherData),
-    });
+      
+      mockedWeatherService.fetchCurrentWeather.mockResolvedValue(mockWeatherData);
 
-    const response = await request(app)
-      .get('/api/weather/current/Tokyo');
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual(mockWeatherData)
+      const response = await request(app).get('/api/weather/current/Tokyo');
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(mockWeatherData);
+      expect(mockedWeatherService.fetchCurrentWeather)
+      .toHaveBeenCalledWith('Tokyo');
+  });
+  
+  it('should return 404 if the city is NOT found', async () => {
 
-    });
+    mockedWeatherService.fetchCurrentWeather.mockRejectedValue(mockNotFoundError)
+
+    const response = await request(app).get('/api/weather/current/Narnia');
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ message: 'city not found' });
+  });
+
 });
-
-
-//PENDING:
-// caching and database integration TESTS
 
 describe('GET /api/weather/forecast/:city', () => {
   it('should return 200 and forecast data for a valid city', async () => {
@@ -63,84 +55,75 @@ describe('GET /api/weather/forecast/:city', () => {
       city: { name: 'Tokyo' },
     };
 
-    (fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockForecastData),
-    });
+    mockedWeatherService.fetchWeatherForecast.mockResolvedValue(mockForecastData);
+
     const response = await request(app).get('/api/weather/forecast/Tokyo');
-    
     expect(response.status).toBe(200);
     expect(response.body).toEqual(mockForecastData);
-    
-    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/data/2.5/forecast?q=Tokyo'));
+    expect(mockedWeatherService.fetchWeatherForecast).toHaveBeenCalledWith('Tokyo');
   });
 
   it('should return 404 if the city is NOT found', async () => {
-    const mockErrorResponse =  { message: 'city not found' };
-    // Mock the fetch API 
-    (fetch as jest.Mock).mockResolvedValue({
-      ok: false,
-      status: 404,
-      json: () => Promise.resolve(mockErrorResponse),
-    });
+    
+    mockedWeatherService.fetchWeatherForecast.mockRejectedValue(mockNotFoundError);
 
-    const response = await request(app)
-      .get('/api/weather/forecast/Narnia');
+    const response = await request(app).get('/api/weather/forecast/Narnia');
     expect(response.status).toBe(404);
-    expect(response.body).toHaveProperty('message', 'city not found');
+    expect(response.body).toEqual({ message: 'city not found' });
   });
 
 });
 
-// Favorites POST endpoint
-describe('Favorites endpoints', () => {
-  beforeEach(() => {
-    weatherController._resetState();
-  });
-
-  it('POST /favorites - should return 201 and a success message when adding a valid city', async () => {
-    const newFavorite = { city: 'Tokyo' };
+describe('Favorites Endpoints', () => {
+  it('POST /favorites - should create a new favorite and return it', async () => {
+    const newFavoritePayload = { city_name: 'Kyoto', country_code: 'JP' };
+    
     const response = await request(app)
       .post('/api/weather/favorites')
-      .send(newFavorite); //NOTE: .send() is used to include a request body
+      .send(newFavoritePayload);
 
     expect(response.status).toBe(201);
-    expect(response.body.city).toBe('Tokyo');
-
+    expect(response.body).toHaveProperty('id', 1);
+    expect(response.body).toHaveProperty('city_name', 'Kyoto');
   });
 
-  it('GET /favorites - should return and array of favorite cities list', async () => {
+  it('GET /favorites - should return an array of favorite city objects', async () => {
     
-    await request(app).post('/api/weather/favorites').send({ city: 'Tokyo' });
-    
-    const response = await request(app)
-      .get('/api/weather/favorites');
+    await request(app).post('/api/weather/favorites').send({ city_name: 'Kyoto', country_code: 'JP' });
+
+    const response = await request(app).get('/api/weather/favorites');
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('favorites');
-    expect(response.body.favorites).toContain('Tokyo');
+    const favoritesList = response.body.favorites;
+    console.log('favorites list', favoritesList);
+    expect(favoritesList).toHaveLength(1);
 
+    expect(favoritesList[0].city_name).toBe('Kyoto');
+    expect(favoritesList[0]).toHaveProperty('id'); 
   });
-  // In backend/tests/weather.test.ts, inside the 'Favorites endpoints' describe block
 
-  it('DELETE /favorites/:id - should remove a city from the favorites list using its ID', async () => {
-
+  it('DELETE /favorites/:id - should remove a favorite city by its ID', async () => {
+  
     const postResponse = await request(app)
-    .post('/api/weather/favorites')
-    .send({ city_name: 'Tokyo', country_code: 'JP'});
+      .post('/api/weather/favorites')
+      .send({ city_name: 'Tokyo', country_code: 'JP' });
+    const newFavoriteId = postResponse.body.id;
 
-    const newFavoriteId = postResponse.body.id; 
-    expect(newFavoriteId).toBeDefined();
+    const deleteResponse = await request(app).delete(`/api/weather/favorites/${newFavoriteId}`);
 
-    const deleteResponse = await request(app)
-      .delete(`/api/weather/favorites/${newFavoriteId}`);
-    
     expect(deleteResponse.status).toBe(200);
     expect(deleteResponse.body).toEqual({
       message: 'Favorite removed successfully',
       id: newFavoriteId,
     });
+
+    const getResponse = await request(app).get('/api/weather/favorites');
+    expect(getResponse.body.favorites).toHaveLength(0);
   });
+
 });
 
+describe('GET /api/weather/history', () => {
 
+});

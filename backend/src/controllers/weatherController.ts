@@ -1,78 +1,62 @@
-import { error } from 'console';
 import {Request, Response } from 'express';
+import { FavoriteCity } from '../types';
+import { weatherService } from '../services/weatherService';
 
-const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY;
 
 export class WeatherController {
 
-  private favorites: string[] = [];
+  private favorites: FavoriteCity[] = [];
+  private nextId = 1;// Helper to simulate SERIAL PRIMARY KEY
 
-//  Implementing the current endpoint
-  async getCurrentWeather(req: Request, res: Response) {
+  //Implementing the current endpoint
+  public getCurrentWeather= async (req: Request, res: Response) => {
     try {
       const { city } = req.params;
-      const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${OPENWEATHER_API_KEY}&units=metric`;
-      const apiResponse = await fetch(url);
-
-      if (!apiResponse.ok) {
-        // Handle errors (like 404) from the API here
-        const errorData = await apiResponse.json();
-        return res.status(apiResponse.status).json({ message: errorData.message || 'Error fetching current weather' });
+      const weatherData = await weatherService.fetchCurrentWeather(city);
+      res.status(200).json(weatherData);  
+    } catch (error: any) {
+      // The service now throws a structured error, which we can use directly
+      if (error.status) {
+        return res.status(error.status).json({ message: error.message });
       }
-
-      const weatherData = await apiResponse.json();
-      res.status(200).json(weatherData);
-
-    } catch (error) {
       console.error('Unexpected error in getCurrentWeather:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  //  Implementing the forecast endpoint
+  public getForecast = async (req: Request, res: Response) => {
+    try {
+      const { city } = req.params;
+      const forecastData = await weatherService.fetchWeatherForecast(city);
+      res.status(200).json(forecastData);
+    } catch (error: any) {
+      if (error.status) {
+        return res.status(error.status).json({ message: error.message });
+      }
+      console.error('Unexpected error in getForecast:', error);
       res.status(500).json({ message: 'Internal Server Error' });
     }
   }
-  //  Implementing the forecast endpoint
-  async getForecast(req: Request, res: Response) {
-    try {
-      const { city } = req.params;
-      const url = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${OPENWEATHER_API_KEY}&units=metric`;
 
-      const apiResponse = await fetch(url);
-
-      if(!apiResponse.ok) {
-        // use eror from the API
-        // defensive code
-        const errorForecastResponse = await apiResponse.json();
-        console.error('Error fetching forecast data:', errorForecastResponse);
-        return res.status(apiResponse.status).json({
-          message: errorForecastResponse.message || 'Error fetching forecast api data',
-        });
-      }
-      const forecastData = await apiResponse.json();
-
-      console.log('--- Forecast data received: ---');
-      // Log with full object to see full data
-      //console.log(JSON.stringify(forecastData, null, 2));
-      // Node mode
-      console.dir(forecastData, { depth: null });
-
-      res.status(200).json(forecastData);
-
-    } catch (error) {
-      console.error('Unexpected error in getForecast:', error);
-      res.status(500).json({
-        message: 'Internal server error',
-      });
-    }
-  }
   // Implementing the addFavorite endpoint
   public addFavorite = async (req: Request, res: Response) => {
-    const { city } = req.body;
+    const { city_name, country_code } = req.body;
 
-    if (city && !this.favorites.includes(city)) {
-      this.favorites.push(city);
+    if (!city_name || !country_code) {
+      return res.status(400).json({ message: 'city_name and country_code are required' });
     }
-    res.status(201).json({ 
-      message: 'City added to favorites',
-      city: city,
-    });
+
+    const newFavorite: FavoriteCity = {
+      id: this.nextId++,
+      city_name: city_name,
+      country_code: country_code,
+      user_id: 1,
+      added_at: new Date(),
+    };
+
+    this.favorites.push(newFavorite);
+    res.status(201).json(newFavorite);
   }
 
   public getFavorites = async (req: Request, res: Response) => {
@@ -80,9 +64,27 @@ export class WeatherController {
       favorites: this.favorites,
     });
   }
+  public deleteFavorite = async (req: Request, res: Response) => {
+    // Get the ID from the URL parameters and convert it to a number
+    const idToDelete = parseInt(req.params.id, 10);
+    const favoriteIndex = this.favorites.findIndex(fav => fav.id === idToDelete);
+    // If not found, return a 404 error
+    if (favoriteIndex === -1) {
+      return res.status(404).json({ message: 'Favorite not found' });
+    }
+    this.favorites.splice(favoriteIndex, 1);
+
+    // Return the success message required by the test
+    res.status(200).json({
+      message: 'Favorite removed successfully',
+      id: idToDelete,
+    });
+  }
   public _resetState() {
     this.favorites = [];
+    this.nextId = 1; 
   }
+  
 }
 
 export const weatherController = new WeatherController();
