@@ -1,5 +1,5 @@
 import {Request, Response } from 'express';
-import { FavoriteCity, SearchHistoryItem } from '../types';
+import { FavoriteCity, SearchHistoryItem, WeatherData } from '../types';
 import { weatherService } from '../services/weatherService';
 
 
@@ -14,14 +14,16 @@ export class WeatherController {
   public getCurrentWeather= async (req: Request, res: Response) => {
     try {
       const { city } = req.params;
-      const weatherData = await weatherService.fetchCurrentWeather(city);
-      //history successful search
+      const weatherData: WeatherData = await weatherService.fetchCurrentWeather(city);
+      //history successful search from the new interface
       const newHistoryItem: SearchHistoryItem = {
         id: this.nextHistoryId++,
         user_id: 1,
         city_name: weatherData.name,
+        country_code: weatherData.sys.country,
         searched_at: new Date(),
-      };
+        weather_data: weatherData,
+      }
       // Add to the beginning of the array and keep only the last 10 searches
       this.history.unshift(newHistoryItem);
       this.history = this.history.slice(0, 10);
@@ -107,4 +109,4 @@ export class WeatherController {
   
 }
 
-export const weatherController = new WeatherController();
+export const weatherController = new WeatherController();//singleton
