@@ -1,18 +1,31 @@
 import {Request, Response } from 'express';
-import { FavoriteCity } from '../types';
+import { FavoriteCity, SearchHistoryItem } from '../types';
 import { weatherService } from '../services/weatherService';
 
 
 export class WeatherController {
 
   private favorites: FavoriteCity[] = [];
-  private nextId = 1;// Helper to simulate SERIAL PRIMARY KEY
+  private history: SearchHistoryItem[] = [];
+  private nextFavoriteId = 1;// Helper to simulate SERIAL PRIMARY KEY
+  private nextHistoryId = 1;
 
   //Implementing the current endpoint
   public getCurrentWeather= async (req: Request, res: Response) => {
     try {
       const { city } = req.params;
       const weatherData = await weatherService.fetchCurrentWeather(city);
+      //history successful search
+      const newHistoryItem: SearchHistoryItem = {
+        id: this.nextHistoryId++,
+        user_id: 1,
+        city_name: weatherData.name,
+        searched_at: new Date(),
+      };
+      // Add to the beginning of the array and keep only the last 10 searches
+      this.history.unshift(newHistoryItem);
+      this.history = this.history.slice(0, 10);
+
       res.status(200).json(weatherData);  
     } catch (error: any) {
       // The service now throws a structured error, which we can use directly
@@ -48,7 +61,7 @@ export class WeatherController {
     }
 
     const newFavorite: FavoriteCity = {
-      id: this.nextId++,
+      id: this.nextFavoriteId++,
       city_name: city_name,
       country_code: country_code,
       user_id: 1,
@@ -80,9 +93,16 @@ export class WeatherController {
       id: idToDelete,
     });
   }
+  public getHistory = async (req: Request, res: Response) => {
+    res.status(200).json({
+      history: this.history,
+    });
+  }
   public _resetState() {
     this.favorites = [];
-    this.nextId = 1; 
+    this.history = [];
+    this.nextFavoriteId = 1; 
+    this.nextHistoryId = 1;
   }
   
 }
