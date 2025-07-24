@@ -124,6 +124,44 @@ describe('Favorites Endpoints', () => {
 
 });
 
-describe('GET /api/weather/history', () => {
+// Add this new describe block to the end of backend/tests/weather.test.ts
 
+describe('GET /api/weather/history', () => {
+  it('should return a list of previously searched cities', async () => {
+    // create search history,need to "search" for a city.
+    // simulate this by calling the current weather endpoint, which should
+    // trigger the history recording logic.
+
+    // mock the service call for this to work.
+    const mockWeatherData = { 
+      name: 'Paris', 
+      main: { temp: 18,  humidity: 40 },
+      weather: [{ description: 'clear sky' }],
+      wind: { speed: 3 },
+    };
+    mockedWeatherService.fetchCurrentWeather.mockResolvedValue(mockWeatherData);
+    
+    // "Search" for the city.
+    await request(app).get('/api/weather/current/Paris');
+
+    //get the search history.
+    const historyResponse = await request(app).get('/api/weather/history');
+
+    expect(historyResponse.status).toBe(200);
+    expect(historyResponse.body).toHaveProperty('history');
+    
+    const historyList = historyResponse.body.history;
+    expect(historyList).toHaveLength(1);
+    // We can check for the object structure, like favorites.
+    expect(historyList[0].city_name).toBe('Paris');
+  });
+
+  it('should return an empty list if no searches have been made', async () => {
+
+    const response = await request(app).get('/api/weather/history');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('history');
+    expect(response.body.history).toEqual([]);
+  });
 });
