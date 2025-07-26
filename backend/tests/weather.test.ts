@@ -4,7 +4,6 @@ import { weatherService } from '../src/services/weatherService';
 //import { weatherController } from '../src/controllers/weatherController';
 import type { WeatherData } from '../src/types';
 import { setupTestDatabase, teardownTestDatabase, createTestUser } from './setup/testDb';
-import jest from 'jest';
 
 jest.mock("../src/services/weatherService")
 const mockedWeatherService = weatherService as jest.Mocked<typeof weatherService>;
@@ -116,7 +115,7 @@ describe("Weather API Endpoints", () => {
       // --- this will FAIL cause controller don't use db yet --
       const response = await request(app)
       .post("/api/weather/favorites")
-      .set()
+      .set("x-user-id", testUserId.toString())
       .send(newFavoritePayload);
       
       expect(response.status).toBe(201);
