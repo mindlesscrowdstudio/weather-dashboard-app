@@ -6,8 +6,10 @@
     "rootDir": ".",
     "strict": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types":["jest"], 
   },
+  
   "include": ["src/**/*", "tests/**/*"], // <-- Make sure to include your tests folder
   "exclude": ["node_modules", "dist"]
 }

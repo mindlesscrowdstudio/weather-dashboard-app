@@ -1,10 +1,9 @@
 // backend/tests/db.test.ts
-// Tests for database setup and basic operations using a TDD approach.
-
+// Tests for database setup and basic operations.
 import { setupTestDatabase, teardownTestDatabase, createTestUser } from './setup/testDb';
 import pool from '../src/config/database';
 
-// GREEN: This function will be created to make the test pass.
+
 // In a real app, this would live in a service/model file, e.g., `src/services/cityService.ts`
 async function addFavoriteCity(userId: number, cityName: string, countryCode: string) {
   const result = await pool.query(
@@ -17,15 +16,15 @@ async function addFavoriteCity(userId: number, cityName: string, countryCode: st
 
 // 'describe' creates a test suite for our database operations.
 describe('Database Operations', () => {
-
+//these funcs prepares the db before the tests run and clean it up after they done 
   // `beforeAll` runs once before any tests in this file start.
-  // Perfect for setting up the database.
+  // setting up the database.
   beforeAll(async () => {
     await setupTestDatabase();
   });
 
   // `afterAll` runs once after all tests in this file are complete.
-  // Perfect for cleaning up and closing connections.
+  // For cleaning up and closing connections.
   afterAll(async () => {
     await teardownTestDatabase();
   });
@@ -44,7 +43,7 @@ describe('Database Operations', () => {
     expect(result.rows[0].username).toBe(username);
   });
 
-  // Test case 2: A full RED -> GREEN example
+  // Test case 2: A full RED -> GREEN
   describe('When managing favorite cities', () => {
     let testUserId: number;
 
@@ -69,7 +68,7 @@ describe('Database Operations', () => {
       expect(favorite.country_code).toBe(countryCode);
     });
 
-    // This is another great test: checking for expected failures (constraints).
+    // This is another test: checking for expected failures (constraints).
     test('should prevent adding the same favorite city twice', async () => {
       const cityName = 'Paris';
       const countryCode = 'FR';
