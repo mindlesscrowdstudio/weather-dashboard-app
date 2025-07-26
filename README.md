@@ -13,6 +13,25 @@ weather-dashboard/
 └── README.md
 
 
+## Backend Architecture
+backend/
+├── src/
+│   ├── config/
+│   │   └── database.ts          
+│   ├── migrations/              
+│   │   ├── 001_create_tables.sql
+│   │   └── migrate.ts           
+│   ├── controllers/
+│   ├── routes/
+│   ├── services/
+│   ├── types/
+│   └── utils/
+├── tests/
+│   ├── setup/                  
+│   │   └── testDb.ts          
+│   └── weather.test.ts
+└── ... (your existing files)
+
 ## ✨ Features
 
 - **Current Weather**: Real-time weather data for any city
@@ -44,3 +63,5 @@ weather-dashboard/
    ```bash
    git clone <weather-dashboard-app>
    cd weather-dashboard
+
+
