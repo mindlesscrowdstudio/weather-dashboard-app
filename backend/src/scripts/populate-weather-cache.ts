@@ -1,6 +1,9 @@
 // backend/src/scripts/populate-weather-cache.ts
-// Script to populate the weather_cache table with sample data.
+// populate the weather_cache table with sample data.
 // Run with: ts-node src/scripts/populate-weather-cache.ts
+
+import dotenv from 'dotenv';
+dotenv.config(); // Ensure environment variables are loaded
 
 import pool from '../config/database';
 import type { WeatherData, ForecastData } from '../types';
