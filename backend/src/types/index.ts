@@ -78,3 +78,13 @@ export interface WeatherCacheItem {
   forecast_data?: ForecastData // TODO: define a more specific type later
   last_updated: Date
 }
+
+// Extend the Express Request interface to include our custom `userId` property.
+// This provides type safety for our middleware.
+declare global {
+  namespace Express {
+    export interface Request {
+      userId?: number;
+    }
+  }
+}

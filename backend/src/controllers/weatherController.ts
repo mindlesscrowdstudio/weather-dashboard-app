@@ -4,21 +4,13 @@ import { FavoriteCity, SearchHistoryItem, WeatherData, ForecastData } from '../t
 import { weatherService } from '../services/weatherService';
 import pool from '../config/database';
 
-
 export class WeatherController {
  
-  //Helper method to get userID from request Headers
-  private getUserId(req: Request): number {
-    const userId = parseInt(req.headers["x-user-id"] as string, 10);
-    if(!userId) throw new Error("User ID is required");  
-    return userId;
-  }
-
   //Implementing the current endpoint
   public getCurrentWeather= async (req: Request, res: Response) => {
     try {
       const { city } = req.params;
-      const userId = this.getUserId(req);
+      const userId = req.userId!; // Non-null assertion: middleware guarantees it exists
 
       const CACHE_DURATION_MINUTES = 10;
       let weatherData: WeatherData | undefined;
@@ -58,7 +50,6 @@ export class WeatherController {
       }
 
       // Type guard to ensure weatherData is defined before use.
-      // This satisfies the TypeScript compiler and handles unexpected edge cases.
       if (!weatherData) {
         // This should not be reachable if the API/cache logic is correct.
         throw new Error("Failed to retrieve weather data for the specified city.");
@@ -73,11 +64,7 @@ export class WeatherController {
     } catch (error: any) {
       // Handles structured errors from the service (401, 404, etc.)
       if (error.status) {
-        // Fix typo: error.staus -> error.status
         return res.status(error.status).json({ message: error.message });
-      }
-      if(error.message === 'User ID is required') { // Handles error from getUserId
-        return res.status(400).json({ message: error.message });
       }
       // Add a fallback for unexpected errors
       console.error("Unexpected error in the getCurrentWeather: ", error);
@@ -89,7 +76,7 @@ export class WeatherController {
   public getForecast = async (req: Request, res: Response) => {
     try {
       const { city } = req.params;
-      const userId = this.getUserId(req);
+      const userId = req.userId!;
       const CACHE_DURATION_MINUTES = 30; // reduce if needed
       let forecastData: ForecastData | undefined;
 
@@ -141,9 +128,6 @@ export class WeatherController {
       if (error.status) {
         return res.status(error.status).json({ message: error.message });
       }
-      if (error.message === 'User ID is required') {
-        return res.status(400).json({ message: error.message });
-      }
       console.error('Unexpected error in getForecast:', error);
       res.status(500).json({ message: 'Internal Server Error' });
     }
@@ -153,7 +137,7 @@ export class WeatherController {
     
     try {  
       const { city_name, country_code } = req.body;
-      const userId = this.getUserId(req);
+      const userId = req.userId!;
       if (!city_name || !country_code) {
         return res.status(400).json({ message: 'city_name and country_code are required' });
       }
@@ -168,21 +152,18 @@ export class WeatherController {
       const newFavorite: FavoriteCity = result.rows[0];
       res.status(201).json(newFavorite);
     } catch(error: any) {
-      if(error.message === 'User ID is required') {
-        return res.status(400).json( {message: error.message});
-      }
       if(error.code === '23505') {
-        //constraint violation
+      
         return res.status(409).json( {message: 'City is already in favorites'});
       }
       console.error('Unexpected error in addFavorite:', error);
       res.status(500).json({ message: 'Internal Server Error' });
     }
-  }// end public addFavorite
+  }
 
   public getFavorites = async (req: Request, res: Response) => {
     try {
-      const userId = this.getUserId(req);
+      const userId = req.userId!;
       const result = await pool.query<FavoriteCity>(
         `SELECT id, user_id, city_name, country_code, added_at 
          FROM favorite_cities 
@@ -193,9 +174,6 @@ export class WeatherController {
       const favorites: FavoriteCity[] = result.rows;
       res.status(200).json({ favorites });
     } catch (error: any) {
-      if (error.message === 'User ID is required') {
-        return res.status(400).json({ message: error.message })
-      }
       console.error("Unexpected error in getFavorites:", error)
       res.status(500).json({ message: "Internal Server Error" })
     }
@@ -204,8 +182,8 @@ export class WeatherController {
   public deleteFavorite = async (req: Request, res: Response) => {
 
     try {
-      const userId = this.getUserId(req);
       const favoriteId = Number.parseInt(req.params.id, 10);
+      const userId = req.userId!;
       if (isNaN(favoriteId)) {
         return res.status(400).json({ message: 'Invalid favorite ID' });
       }
@@ -225,9 +203,6 @@ export class WeatherController {
         id: favoriteId,
       });
     } catch (error: any) {
-      if (error.message === 'User ID is required') {
-        return res.status(400).json({ message: error.message })
-      }
       console.error('Unexpected error in deleteFavorite:', error)
       res.status(500).json({ message: 'Internal Server Error' });
     }
@@ -235,7 +210,7 @@ export class WeatherController {
   // Gets from database
   public getHistory = async (req: Request, res: Response) => {
     try {
-      const userId = this.getUserId(req);
+      const userId = req.userId!;
       const result = await pool.query<SearchHistoryItem>(
         `SELECT id, user_id, city_name, country_code, searched_at, weather_data 
          FROM weather_history 
@@ -249,9 +224,6 @@ export class WeatherController {
      history
     });
    } catch(error: any) {
-    if (error.message === 'User ID is required') {
-        return res.status(400).json({ message: error.message })
-      }
       console.error('Unexpected error in getHistory:', error)
       res.status(500).json({ message: 'Internal Server Error' });
    }
