@@ -1,6 +1,5 @@
 // backend/tests/setup/globalSetup.ts
 // This script runs ONCE before all test suites.
-
 import { resetTestDatabase } from './testDb';
 
 export default async () => {
