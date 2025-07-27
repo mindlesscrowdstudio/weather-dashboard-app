@@ -1,6 +1,6 @@
 import request from 'supertest';
 import app from '../src/app';
-import { createTestUser } from './setup/testDb';
+import { createTestUser, cleanupTestData } from './setup/testDb';
 import { weatherService } from '../src/services/weatherService';
 import type { WeatherData, ForecastData } from '../src/types';
 import pool from '../src/config/database';
@@ -31,9 +31,9 @@ describe('Weather API Caching Logic', () => {
   let testUserId: number;
 
   beforeEach(async () => {
-    // Selectively clean only the tables needed for these tests, leaving weather_cache intact.
-    // This prevents erasing pre-populated cache data.
-    await pool.query('TRUNCATE users, weather_history, favorite_cities RESTART IDENTITY CASCADE');
+    // Use the standard cleanup routine to ensure consistency across all test files.
+    // This prevents race conditions when tests are run in parallel.
+    await cleanupTestData();
     testUserId = await createTestUser();
     jest.clearAllMocks();
   });
@@ -45,7 +45,7 @@ describe('Weather API Caching Logic', () => {
 
   it('should cache current weather data after the first API call (miss then hit)', async () => {
     // Use a unique city name for this test to guarantee a cache miss on the first call.
-    const uniqueCity = `Alphaville-${Date.now()}`;
+    const uniqueCity = `TestCity-${Date.now()}`;
     const mockWeatherData = createMockWeatherData(uniqueCity);
 
     mockedWeatherService.fetchCurrentWeather.mockResolvedValue(mockWeatherData);
@@ -74,7 +74,7 @@ describe('Weather API Caching Logic', () => {
   });
 
   it('should cache forecast data after the first API call (miss then hit)', async () => {
-    const uniqueCity = `Alphaville-Forecast-${Date.now()}`;
+    const uniqueCity = `TestCity-Forecast-${Date.now()}`;
     const mockWeatherData = createMockWeatherData(uniqueCity);
     const mockForecastData: ForecastData = {
       city: { id: mockWeatherData.id, name: uniqueCity, country: 'XX' },

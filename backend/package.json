@@ -6,6 +6,7 @@
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:inBand": "npm test -- --runInBand",
     "dev": "nodemon",
     "build": "tsc",
     "start": "node dist/server.ts",

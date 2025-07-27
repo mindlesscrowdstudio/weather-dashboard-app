@@ -30,10 +30,10 @@ export async function createTestUser(username = "testuser"): Promise<number> {
 // Cleans data from tables between tests to ensure isolation.
 export async function cleanupTestData() {
   try {
-    await pool.query("DELETE FROM weather_history");
-    await pool.query("DELETE FROM favorite_cities");
-    await pool.query("DELETE FROM weather_cache");
-     await pool.query("DELETE FROM users");
+    // TRUNCATE is faster than DELETE and resets serial counters.
+    // RESTART IDENTITY ensures IDs start from 1 for each test, making tests predictable.
+    // CASCADE handles foreign key dependencies automatically.
+    await pool.query("TRUNCATE users, favorite_cities, weather_history, weather_cache RESTART IDENTITY CASCADE");
   } catch (error) {
     console.error("❌ Failed to cleanup test data:", error);
     throw error;

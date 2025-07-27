@@ -2,8 +2,8 @@
 import request from 'supertest';
 import app from '../src/app';
 import { weatherService } from '../src/services/weatherService';
-//import { weatherController } from '../src/controllers/weatherController';
-import type { WeatherData } from '../src/types';
+
+import type { WeatherData, ForecastData} from '../src/types';
 import { 
   createTestUser,
   cleanupTestData,
@@ -84,14 +84,19 @@ describe("Weather API Endpoints", () => {
   describe("GET /api/weather/forecast/:city", () => {
     test("should return 200 and forecast data for a valid city", async () => {
       console.log("🧪 Testing: GET forecast for Tokyo");
-      const mockForecastData = {
+      // Ensure the mock data fully complies with the ForecastData interface
+      const mockForecastData: ForecastData = {
         list: [
-          { dt: 1661871600, main: { temp: 22.8 } },
-          { dt: 1661958000, main: { temp: 21.5 } },
+          { dt: 1661871600, main: { temp: 22.8 }, weather: [{ main: "Clear" }] },
+          { dt: 1661958000, main: { temp: 21.5 }, weather: [{ main: "Clouds" }] },
         ],
-        city: { name: "Tokyo" },
-      }
-      mockedWeatherService.fetchWeatherForecast.mockResolvedValue(mockForecastData as any);
+        city: {
+          id: 1850147, // Add the city ID
+          name: "Tokyo",
+          country: "JP", // Add the country code
+        },
+      };
+      mockedWeatherService.fetchWeatherForecast.mockResolvedValue(mockForecastData);
 
       const response = await request(app).get("/api/weather/forecast/Tokyo").set("x-user-id", testUserId.toString());
 
