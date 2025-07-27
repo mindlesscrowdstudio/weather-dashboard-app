@@ -7,6 +7,22 @@ const openWeatherAPI = axios.create({
     units: 'metric',
   },
 });
+
+// Centralized error handling function
+export const handleAPIError = (error:any) => {
+  if(axios.isAxiosError(error) && error.response) {
+    const { status, data } = error.response;
+    const message = data.message || `API error with status ${status}`;
+    return { status, message }; 
+  } else if(error instanceof Error) {
+    //generic js error
+    return { status: 500, message: error.message }
+  } else {
+    //unknown error
+    return { status: 500, message: 'An unexpected error occurred' }
+  }
+}
+
 // create a class to encapsulate the API calls
 class WeatherService {
   async fetchCurrentWeather(city: string) {
@@ -16,15 +32,7 @@ class WeatherService {
       });
       return response.data;
     } catch (error) {
-      // Axios wraps errors, so we can inspect them to get the real status and data
-      if (axios.isAxiosError(error) && error.response) {
-        throw {
-          status: error.response.status,
-          message: error.response.data.message || 'Error fetching current weather',
-        };
-      }
-      // Rethrow if it's not a standard API error
-      throw error;
+      throw handleAPIError(error);
     }
   }
   async fetchWeatherForecast(city: string) {
@@ -34,13 +42,7 @@ class WeatherService {
       });
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw {
-          status: error.response.status,
-          message: error.response.data.message || 'Error fetching forecast data',
-        };
-      }
-      throw error;
+      throw handleAPIError(error);
     }
   }
 
