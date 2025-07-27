@@ -19,39 +19,130 @@ export class WeatherController {
     try {
       const { city } = req.params;
       const userId = this.getUserId(req);
- 
-      const weatherData: WeatherData = await weatherService.fetchCurrentWeather(city);
-      //save to db instead of in-memory array
+
+      const CACHE_DURATION_MINUTES = 10;
+      let weatherData: WeatherData | undefined;
+
+      // 1. Check for a fresh cache entry
+      const cacheResult = await pool.query(
+        `SELECT current_weather_data, last_updated FROM weather_cache WHERE LOWER(city_name) = LOWER($1)`,
+        [city]
+      );
+      // Use a truthy check for rowCount, as its type can be `number | null`
+      if (cacheResult.rowCount) {
+        const cacheEntry = cacheResult.rows[0];
+        const lastUpdated = new Date(cacheEntry.last_updated);
+        const ageInMinutes = (new Date().getTime() - lastUpdated.getTime()) / 60000;
+
+        if (ageInMinutes < CACHE_DURATION_MINUTES) {
+          console.log(`CACHE HIT for current weather: ${city}`);
+          weatherData = cacheEntry.current_weather_data;
+        }
+      }
+      // 2. If cache miss or stale, fetch from API
+      if (!weatherData) {
+        console.log(`CACHE MISS for current weather: ${city}`);
+        const apiData = await weatherService.fetchCurrentWeather(city);
+        // 3. Update cache with new data using UPSERT
+        await pool.query(
+          `INSERT INTO weather_cache (city_id, city_name, country_code, current_weather_data, last_updated)
+          VALUES ($1, $2, $3, $4, NOW())
+          ON CONFLICT (city_id) DO UPDATE SET
+            current_weather_data = EXCLUDED.current_weather_data,
+            city_name = EXCLUDED.city_name,
+            country_code = EXCLUDED.country_code,
+            last_updated = NOW()`,
+          [apiData.id, apiData.name, apiData.sys.country, JSON.stringify(apiData)]
+        );
+        weatherData = apiData;
+      }
+
+      // Type guard to ensure weatherData is defined before use.
+      // This satisfies the TypeScript compiler and handles unexpected edge cases.
+      if (!weatherData) {
+        // This should not be reachable if the API/cache logic is correct.
+        throw new Error("Failed to retrieve weather data for the specified city.");
+      }
       await pool.query(
         `INSERT INTO weather_history (user_id, city_name, country_code, weather_data) 
          VALUES ($1, $2, $3, $4)`,
          [userId, weatherData.name, weatherData.sys.country, JSON.stringify(weatherData)],
       )
-      res.status
-
-      res.status(200).json(weatherData);  
+      // 5. Send response
+      res.status(200).json(weatherData);
     } catch (error: any) {
-      // The service now throws a structured error, which we can use directly
-      if(error.status === 404) {
-        return res.status(404).json({message: error.message});
+      // Handles structured errors from the service (401, 404, etc.)
+      if (error.status) {
+        // Fix typo: error.staus -> error.status
+        return res.status(error.status).json({ message: error.message });
       }
-      if(error.message === 'User ID is required' || error.message === "Invalid User ID") {
+      if(error.message === 'User ID is required') { // Handles error from getUserId
         return res.status(400).json({ message: error.message });
       }
+      // Add a fallback for unexpected errors
       console.error("Unexpected error in the getCurrentWeather: ", error);
       res.status(500).json({ message: "Internal server error" });
     }
   }
 
-  //  Implementing the forecast endpoint
+  //  Implementing forecast endpoint
   public getForecast = async (req: Request, res: Response) => {
     try {
       const { city } = req.params;
-      const forecastData: ForecastData = await weatherService.fetchWeatherForecast(city);
+      const userId = this.getUserId(req);
+      const CACHE_DURATION_MINUTES = 30; // reduce if needed
+      let forecastData: ForecastData | undefined;
+
+      const cacheResult = await pool.query(
+        `SELECT forecast_data, last_updated FROM weather_cache WHERE LOWER(city_name) = LOWER($1)`,
+        [city]
+      );
+
+      if (cacheResult.rowCount && cacheResult.rows[0].forecast_data) {
+        const cacheEntry = cacheResult.rows[0];
+        const lastUpdated = new Date(cacheEntry.last_updated);
+        const ageInMinutes = (new Date().getTime() - lastUpdated.getTime()) / 60000;
+
+        if (ageInMinutes < CACHE_DURATION_MINUTES) {
+          console.log(`CACHE HIT for forecast: ${city}`);
+          forecastData = cacheEntry.forecast_data;
+        }
+      }
+
+      if (!forecastData) {
+        console.log(`CACHE MISS for forecast: ${city}`);
+        const apiData = await weatherService.fetchWeatherForecast(city);
+        await pool.query(
+          `INSERT INTO weather_cache (city_id, city_name, country_code, forecast_data, last_updated)
+           VALUES ($1, $2, $3, $4, NOW())
+           ON CONFLICT (city_id) DO UPDATE SET
+             forecast_data = EXCLUDED.forecast_data,
+             city_name = EXCLUDED.city_name,
+             country_code = EXCLUDED.country_code,
+             last_updated = NOW()`,
+          [apiData.city.id, apiData.city.name, apiData.city.country, JSON.stringify(apiData)]
+        );
+        forecastData = apiData;
+      }
+
+      // Type guard to ensure forecastData is defined before use.
+      if (!forecastData) {
+        // This should not be reachable if the API/cache logic is correct.
+        throw new Error("Failed to retrieve forecast data for the specified city.");
+      }
+      //Log forecast search to the user's history 
+      await pool.query(
+        `INSERT INTO weather_history (user_id, city_name, country_code, weather_data) 
+         VALUES ($1, $2, $3, $4)`,
+        [userId, forecastData.city.name, forecastData.city.country, JSON.stringify(forecastData)],
+      );
       res.status(200).json(forecastData);
     } catch (error: any) {
       if (error.status) {
         return res.status(error.status).json({ message: error.message });
+      }
+      if (error.message === 'User ID is required') {
+        return res.status(400).json({ message: error.message });
       }
       console.error('Unexpected error in getForecast:', error);
       res.status(500).json({ message: 'Internal Server Error' });
@@ -77,7 +168,7 @@ export class WeatherController {
       const newFavorite: FavoriteCity = result.rows[0];
       res.status(201).json(newFavorite);
     } catch(error: any) {
-      if(error.message === 'User ID is required'  || error.message === 'Invalid UserID') {
+      if(error.message === 'User ID is required') {
         return res.status(400).json( {message: error.message});
       }
       if(error.code === '23505') {
@@ -102,7 +193,7 @@ export class WeatherController {
       const favorites: FavoriteCity[] = result.rows;
       res.status(200).json({ favorites });
     } catch (error: any) {
-      if (error.message === 'User ID is required' || error.message === 'Invalid User ID') {
+      if (error.message === 'User ID is required') {
         return res.status(400).json({ message: error.message })
       }
       console.error("Unexpected error in getFavorites:", error)
@@ -134,7 +225,7 @@ export class WeatherController {
         id: favoriteId,
       });
     } catch (error: any) {
-      if (error.message === 'User ID is required' || error.message === 'Invalid User ID') {
+      if (error.message === 'User ID is required') {
         return res.status(400).json({ message: error.message })
       }
       console.error('Unexpected error in deleteFavorite:', error)
@@ -158,7 +249,7 @@ export class WeatherController {
      history
     });
    } catch(error: any) {
-    if (error.message === 'User ID is required' || error.message === 'Invalid User ID') {
+    if (error.message === 'User ID is required') {
         return res.status(400).json({ message: error.message })
       }
       console.error('Unexpected error in getHistory:', error)

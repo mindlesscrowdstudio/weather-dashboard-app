@@ -41,7 +41,7 @@ async function populateWeatherCache() {
         { dt: 1661882400, main: { temp: 18.5 }, weather: [{ main: "Clouds" }] },
         { dt: 1661893200, main: { temp: 14.8 }, weather: [{ main: "Rain" }] },
       ],
-      city: { name: "London", country: "GB" },
+      city: { id: 2643743, name: "London", country: "GB" },
     };
 
     // Insert London data using a robust UPSERT with the EXCLUDED keyword
@@ -90,7 +90,7 @@ async function populateWeatherCache() {
         {"dt": 1753617600, main: {temp: 29.79}, weather: [{ main: "Clouds"}]},
         {"dt": 1753628400, main: {temp: 28.19}, weather: [{ main: "Clear"}]},
       ],
-      city: { name: "Tokyo", country: "JP" },
+      city: { id: 1850147, name: "Tokyo", country: "JP" },
     }
 
   
