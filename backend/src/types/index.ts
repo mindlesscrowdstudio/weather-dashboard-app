@@ -36,6 +36,24 @@ export interface WeatherData {
   cod: number
 }
 
+export interface ForecastData {
+  city: {
+    id: number;  //support forecast caching
+    name: string
+    country: string
+  }
+  list: {
+    dt: number
+    main: {
+      temp: number
+    }
+    weather: {
+      main: string
+    }[]
+  }[]
+}
+
+
 export interface FavoriteCity {
   id: number;
   user_id: number; // hardcode this to a test user
@@ -57,6 +75,6 @@ export interface WeatherCacheItem {
   city_name: string
   country_code: string
   current_weather_data?: WeatherData
-  forecast_data?: any // TODO: define a more specific type later
+  forecast_data?: ForecastData // TODO: define a more specific type later
   last_updated: Date
 }

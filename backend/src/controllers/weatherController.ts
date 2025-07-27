@@ -1,6 +1,6 @@
 //backend/src/controllers/weatherController.ts
 import {Request, Response } from 'express';
-import { FavoriteCity, SearchHistoryItem, WeatherData } from '../types';
+import { FavoriteCity, SearchHistoryItem, WeatherData, ForecastData } from '../types';
 import { weatherService } from '../services/weatherService';
 import pool from '../config/database';
 
@@ -47,7 +47,7 @@ export class WeatherController {
   public getForecast = async (req: Request, res: Response) => {
     try {
       const { city } = req.params;
-      const forecastData = await weatherService.fetchWeatherForecast(city);
+      const forecastData: ForecastData = await weatherService.fetchWeatherForecast(city);
       res.status(200).json(forecastData);
     } catch (error: any) {
       if (error.status) {
@@ -67,15 +67,15 @@ export class WeatherController {
         return res.status(400).json({ message: 'city_name and country_code are required' });
       }
       // Save to database instead of in-memory array
-      const result = await pool.query(
+      const result = await pool.query<FavoriteCity>(
         `INSERT INTO favorite_cities (user_id, city_name, country_code) 
           VALUES ($1, $2, $3) 
           RETURNING id, user_id, city_name, country_code, added_at`,
         [userId, city_name, country_code],
       );
     
-      const newFavorite = result.rows[0];
-      res.status(201).json(newFavorite); 
+      const newFavorite: FavoriteCity = result.rows[0];
+      res.status(201).json(newFavorite);
     } catch(error: any) {
       if(error.message === 'User ID is required'  || error.message === 'Invalid UserID') {
         return res.status(400).json( {message: error.message});
@@ -92,21 +92,14 @@ export class WeatherController {
   public getFavorites = async (req: Request, res: Response) => {
     try {
       const userId = this.getUserId(req);
-      //  Get from database instead of in-memory array
-      const result = await pool.query(
+      const result = await pool.query<FavoriteCity>(
         `SELECT id, user_id, city_name, country_code, added_at 
          FROM favorite_cities 
          WHERE user_id = $1 
          ORDER BY added_at DESC`,
         [userId],
       );
-      const favorites = result.rows.map((row) => ({
-        id: row.id,
-        user_id: row.user_id,
-        city_name: row.city_name,
-        country_code: row.country_code,
-        added_at: row.added_at,
-      }));
+      const favorites: FavoriteCity[] = result.rows;
       res.status(200).json({ favorites });
     } catch (error: any) {
       if (error.message === 'User ID is required' || error.message === 'Invalid User ID') {
@@ -151,24 +144,16 @@ export class WeatherController {
   // Gets from database
   public getHistory = async (req: Request, res: Response) => {
     try {
-    const userId = this.getUserId(req);
-    const result = await pool.query(
+      const userId = this.getUserId(req);
+      const result = await pool.query<SearchHistoryItem>(
         `SELECT id, user_id, city_name, country_code, searched_at, weather_data 
          FROM weather_history 
          WHERE user_id = $1 
          ORDER BY searched_at DESC 
          LIMIT 10`,
         [userId],
-      )
-    const history = result.rows.map((row) => ({
-      id: row.id,
-      user_id: row.user_id,
-      city_name: row.city_name,
-      country_code: row.country_code,
-      searched_at: row.searched_at,
-      weather_data: row.weather_data, 
-    }));
-
+      );
+    const history: SearchHistoryItem[] = result.rows;
     res.status(200).json({
      history
     });
@@ -180,6 +165,7 @@ export class WeatherController {
       res.status(500).json({ message: 'Internal Server Error' });
    }
   }
+  
  
   
 }
