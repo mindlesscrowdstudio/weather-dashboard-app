@@ -1,24 +1,68 @@
-interface SearchBarProps {
-  searchTerm: string
-  setSearchTerm: (value: string) => void
-  handleSearch: (e: React.FormEvent) => void
-  loading?: boolean
-}
-interface ForecastListProps {
-  forecastData: ForecastData | null
-  unit?: "C" | "F"
+export interface SearchBarProps {
+  searchTerm: string;
+  setSearchTerm: (value: string) => void;
+  handleSearch: (e: React.FormEvent) => void;
+  loading?: boolean;
 }
 
-interface WeatherCardProps {
-  weatherData: WeatherData | null;
-  loading?: boolean;
-  error?: string | null;
-  unit?: "C" | "F";
-  isFavorite?: boolean;
-  onToggleFavorite?: () => void;
+export interface WeatherData {
+  coord: { lon: number; lat: number };
+  weather: { id: number; main: string; description: string; icon: string }[];
+  base: string;
+  main: {
+    temp: number;
+    feels_like: number;
+    temp_min: number;
+    temp_max: number;
+    pressure: number;
+    humidity: number;
+  };
+  visibility: number;
+  wind: { speed: number; deg: number };
+  clouds: { all: number };
+  dt: number;
+  sys: {
+    type: number;
+    id: number;
+    country: string;
+    sunrise: number;
+    sunset: number;
+  };
+  timezone: number;
+  id: number;
+  name: string;
+  cod: number;
 }
-interface WeatherHistoryProps {
-  history: SearchHistoryItem[]
-  onHistoryClick: (city: string) => void
-  onClearHistory: () => void
+
+export interface ForecastData {
+  city: {
+    id: number;
+    name: string;
+    country: string;
+  };
+  list: {
+    dt: number;
+    main: {
+      temp: number;
+    };
+    weather: {
+      main: string;
+    }[];
+  }[];
+}
+
+export interface FavoriteCity {
+  id: number;
+  user_id: number;
+  city_name: string;
+  country_code: string;
+  added_at: Date;
+}
+
+export interface SearchHistoryItem {
+  id: number;
+  city_name: string;
+  country_code: string;
+  searched_at: Date;
+  weather_data: WeatherData | ForecastData;
 }
