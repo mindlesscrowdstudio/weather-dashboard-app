@@ -1,12 +1,15 @@
 
+/* import { DashboardPage } from '@/pages/DashboardPage'; */
 
 function App() {
 
 
   return (
     <>
-      <code>APP.tsx</code><br/>
-      <code>FE Dashboard Weather App</code>
+      <div className="min-h-screen bg-gray-100 flex flex-col items-center p-4">
+        test
+       {/* <DashboardPage /> */}
+    </div>
     </>
   )
 }
