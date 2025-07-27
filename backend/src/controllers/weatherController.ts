@@ -3,37 +3,20 @@ import {Request, Response } from 'express';
 import { FavoriteCity, SearchHistoryItem, WeatherData, ForecastData } from '../types';
 import { weatherService } from '../services/weatherService';
 import pool from '../config/database';
+import { getFromCache } from '../utils/cacheUtility';
 
 export class WeatherController {
  
   //Implementing the current endpoint
   public getCurrentWeather= async (req: Request, res: Response) => {
-    try {
       const { city } = req.params;
       const userId = req.userId!; // Non-null assertion: middleware guarantees it exists
+      
+      // 1. Check for a fresh cache entry using the utility
+      let weatherData = await getFromCache<WeatherData>(city, 'current_weather_data', 10);
 
-      const CACHE_DURATION_MINUTES = 10;
-      let weatherData: WeatherData | undefined;
-
-      // 1. Check for a fresh cache entry
-      const cacheResult = await pool.query(
-        `SELECT current_weather_data, last_updated FROM weather_cache WHERE LOWER(city_name) = LOWER($1)`,
-        [city]
-      );
-      // Use a truthy check for rowCount, as its type can be `number | null`
-      if (cacheResult.rowCount) {
-        const cacheEntry = cacheResult.rows[0];
-        const lastUpdated = new Date(cacheEntry.last_updated);
-        const ageInMinutes = (new Date().getTime() - lastUpdated.getTime()) / 60000;
-
-        if (ageInMinutes < CACHE_DURATION_MINUTES) {
-          console.log(`CACHE HIT for current weather: ${city}`);
-          weatherData = cacheEntry.current_weather_data;
-        }
-      }
-      // 2. If cache miss or stale, fetch from API
+      // 2. If cache miss, fetch from API and update cache
       if (!weatherData) {
-        console.log(`CACHE MISS for current weather: ${city}`);
         const apiData = await weatherService.fetchCurrentWeather(city);
         // 3. Update cache with new data using UPSERT
         await pool.query(
@@ -61,43 +44,16 @@ export class WeatherController {
       )
       // 5. Send response
       res.status(200).json(weatherData);
-    } catch (error: any) {
-      // Handles structured errors from the service (401, 404, etc.)
-      if (error.status) {
-        return res.status(error.status).json({ message: error.message });
-      }
-      // Add a fallback for unexpected errors
-      console.error("Unexpected error in the getCurrentWeather: ", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
   }
 
   //  Implementing forecast endpoint
   public getForecast = async (req: Request, res: Response) => {
-    try {
       const { city } = req.params;
       const userId = req.userId!;
-      const CACHE_DURATION_MINUTES = 30; // reduce if needed
-      let forecastData: ForecastData | undefined;
-
-      const cacheResult = await pool.query(
-        `SELECT forecast_data, last_updated FROM weather_cache WHERE LOWER(city_name) = LOWER($1)`,
-        [city]
-      );
-
-      if (cacheResult.rowCount && cacheResult.rows[0].forecast_data) {
-        const cacheEntry = cacheResult.rows[0];
-        const lastUpdated = new Date(cacheEntry.last_updated);
-        const ageInMinutes = (new Date().getTime() - lastUpdated.getTime()) / 60000;
-
-        if (ageInMinutes < CACHE_DURATION_MINUTES) {
-          console.log(`CACHE HIT for forecast: ${city}`);
-          forecastData = cacheEntry.forecast_data;
-        }
-      }
-
+      
+      let forecastData = await getFromCache<ForecastData>(city, 'forecast_data', 30);
+      
       if (!forecastData) {
-        console.log(`CACHE MISS for forecast: ${city}`);
         const apiData = await weatherService.fetchWeatherForecast(city);
         await pool.query(
           `INSERT INTO weather_cache (city_id, city_name, country_code, forecast_data, last_updated)
@@ -124,18 +80,9 @@ export class WeatherController {
         [userId, forecastData.city.name, forecastData.city.country, JSON.stringify(forecastData)],
       );
       res.status(200).json(forecastData);
-    } catch (error: any) {
-      if (error.status) {
-        return res.status(error.status).json({ message: error.message });
-      }
-      console.error('Unexpected error in getForecast:', error);
-      res.status(500).json({ message: 'Internal Server Error' });
-    }
   }
   // Implementing the addFavorite endpoint
   public addFavorite = async (req: Request, res: Response) => {
-    
-    try {  
       const { city_name, country_code } = req.body;
       const userId = req.userId!;
       if (!city_name || !country_code) {
@@ -151,18 +98,9 @@ export class WeatherController {
     
       const newFavorite: FavoriteCity = result.rows[0];
       res.status(201).json(newFavorite);
-    } catch(error: any) {
-      if(error.code === '23505') {
-      
-        return res.status(409).json( {message: 'City is already in favorites'});
-      }
-      console.error('Unexpected error in addFavorite:', error);
-      res.status(500).json({ message: 'Internal Server Error' });
-    }
   }
 
   public getFavorites = async (req: Request, res: Response) => {
-    try {
       const userId = req.userId!;
       const result = await pool.query<FavoriteCity>(
         `SELECT id, user_id, city_name, country_code, added_at 
@@ -173,15 +111,9 @@ export class WeatherController {
       );
       const favorites: FavoriteCity[] = result.rows;
       res.status(200).json({ favorites });
-    } catch (error: any) {
-      console.error("Unexpected error in getFavorites:", error)
-      res.status(500).json({ message: "Internal Server Error" })
-    }
   }
   //Delete from DB
   public deleteFavorite = async (req: Request, res: Response) => {
-
-    try {
       const favoriteId = Number.parseInt(req.params.id, 10);
       const userId = req.userId!;
       if (isNaN(favoriteId)) {
@@ -202,14 +134,9 @@ export class WeatherController {
         message: 'Favorite removed successfully',
         id: favoriteId,
       });
-    } catch (error: any) {
-      console.error('Unexpected error in deleteFavorite:', error)
-      res.status(500).json({ message: 'Internal Server Error' });
-    }
   }
   // Gets from database
   public getHistory = async (req: Request, res: Response) => {
-    try {
       const userId = req.userId!;
       const result = await pool.query<SearchHistoryItem>(
         `SELECT id, user_id, city_name, country_code, searched_at, weather_data 
@@ -223,10 +150,6 @@ export class WeatherController {
     res.status(200).json({
      history
     });
-   } catch(error: any) {
-      console.error('Unexpected error in getHistory:', error)
-      res.status(500).json({ message: 'Internal Server Error' });
-   }
   }
   
  

@@ -53,7 +53,6 @@ export interface ForecastData {
   }[]
 }
 
-
 export interface FavoriteCity {
   id: number;
   user_id: number; // hardcode this to a test user

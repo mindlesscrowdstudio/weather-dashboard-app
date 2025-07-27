@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { weatherController } from '../controllers/weatherController';
 import { requireUser } from '../middleware/auth';
+import { asyncHandler } from '../utils/asyncHandlerUtility';
 
 const router = Router();
 
@@ -8,10 +9,10 @@ const router = Router();
 // This ensures no controller method is called without a valid user ID.
 router.use(requireUser);
 
-router.get('/current/:city', weatherController.getCurrentWeather);
-router.get('/forecast/:city', weatherController.getForecast);
-router.post('/favorites', weatherController.addFavorite);
-router.get('/favorites', weatherController.getFavorites);
-router.delete('/favorites/:id', weatherController.deleteFavorite);
-router.get('/history', weatherController.getHistory);
+router.get('/current/:city', asyncHandler(weatherController.getCurrentWeather));
+router.get('/forecast/:city', asyncHandler(weatherController.getForecast));
+router.post('/favorites', asyncHandler(weatherController.addFavorite));
+router.get('/favorites', asyncHandler(weatherController.getFavorites));
+router.delete('/favorites/:id', asyncHandler(weatherController.deleteFavorite));
+router.get('/history', asyncHandler(weatherController.getHistory));
 export default router;
