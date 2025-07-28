@@ -59,6 +59,7 @@ backend/
 │ │ └── testDb.ts  
 │ └── weather.test.ts
 └──
+For a visual representation of the data model, see the [Database Schema Diagram](backend/documentation/database-schema.md).
 
 ### Installation
 
