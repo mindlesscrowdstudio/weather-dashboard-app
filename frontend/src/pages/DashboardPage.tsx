@@ -1,7 +1,7 @@
 "use client"
 
-import type React from "react"
-import { useState, useEffect, useCallback } from "react"
+import type React from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Cloud, Star } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -50,7 +50,7 @@ export default function WeatherDashboard() {
       const [weather, forecast] = await Promise.all([apiService.getCurrentWeather(city), apiService.getForecast(city)])
       setWeatherData(weather)
       setForecastData(forecast)
-      fetchHistory() // Refresh history after a successful search
+      fetchHistory()
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message)
@@ -70,40 +70,64 @@ export default function WeatherDashboard() {
     fetchFavorites()
   }, [fetchWeatherData, fetchFavorites])
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    fetchWeatherData(searchTerm)
-  }
+  const handleSearch = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault()
+      fetchWeatherData(searchTerm)
+    },
+    [fetchWeatherData, searchTerm]
+  )
 
-  const toggleFavorite = async () => {
-    if (!weatherData) return
+  const toggleFavorite = useCallback(async () => {
+    if (!weatherData) return;
 
-    const currentCityName = weatherData.name
-    const existingFavorite = favorites.find((fav) => fav.city_name.toLowerCase() === currentCityName.toLowerCase())
+    const existingFavorite = favorites.find(
+      (fav) => fav.city_name.toLowerCase() === weatherData.name.toLowerCase()
+    );
+
+    // --- ui Update ---
+    const originalFavorites = favorites;
+    if (existingFavorite) {
+      // remove the city from the UI
+      setFavorites((prev) => prev.filter((fav) => fav.id !== existingFavorite.id));
+    } else {
+      // add city to the UI with a temporary ID
+      const newFavorite: FavoriteCity = {
+        id: Date.now(), // temporary ID for the key
+        user_id: 0,
+        city_name: weatherData.name,
+        country_code: weatherData.sys.country,
+        added_at: new Date().toISOString(), // Add current timestamp for the update
+      };
+      setFavorites((prev) => [...prev, newFavorite]);
+    }
 
     try {
       if (existingFavorite) {
-        await apiService.deleteFavorite(existingFavorite.id)
+        await apiService.deleteFavorite(existingFavorite.id);
       } else {
-        await apiService.addFavorite(weatherData.name, weatherData.sys.country)
+        await apiService.addFavorite(weatherData.name, weatherData.sys.country);
       }
-      // Refresh the favorites list from the server to ensure consistency
-      fetchFavorites()
+      // refetch to sync with the database.
+      // This replaces the temporary favorite with the real one.
+      fetchFavorites();
     } catch (err) {
-      console.error("Failed to toggle favorite:", err)
-      setError("Could not update favorites. Please try again.")
+      console.error("Failed to toggle favorite:", err);
+      setError("Could not update favorites. Please try again.");
+      // --- Revert on Failure ---
+      setFavorites(originalFavorites);
     }
-  }
+  }, [weatherData, favorites, fetchFavorites]);
 
-  const handleHistoryClick = (city: string) => {
-    setSearchTerm(city)
-    fetchWeatherData(city)
-  }
+  const handleHistoryClick = useCallback((city: string) => {
+    setSearchTerm(city);
+    fetchWeatherData(city);
+  }, [fetchWeatherData]);
 
-  const isFavorite = weatherData ? favorites.some((fav) => fav.city_name.toLowerCase() === weatherData.name.toLowerCase()) : false
+  const isFavorite = useMemo(() => (weatherData ? favorites.some((fav) => fav.city_name.toLowerCase() === weatherData.name.toLowerCase()) : false), [weatherData, favorites]);
 
   return (
-    // The main container is now wider (max-w-7xl). 
+   
     <div className="max-w-7xl mx-auto">
       {/* Header */}
         <header className="flex justify-between items-center mb-8">
@@ -146,7 +170,7 @@ export default function WeatherDashboard() {
         {/* Forecast List */}
         <ForecastList forecastData={forecastData} unit={unit} />
 
-        {/* Bottom Section - Favorites and History */}
+        {/* Bottom Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Favorite Cities */}
           <Card className="bg-white shadow-sm">

@@ -1,3 +1,4 @@
+import { memo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { ForecastData } from "@/types"
 import { WeatherIcon } from "@/components/WeatherIcon"
@@ -16,7 +17,7 @@ const formatDate = (timestamp: number) => {
   })
 }
 
-export function ForecastList({ forecastData, unit }: ForecastListProps) {
+export const ForecastList = memo(({ forecastData, unit }: ForecastListProps) => {
   if (!forecastData) {
     return null
   }
@@ -59,4 +60,4 @@ export function ForecastList({ forecastData, unit }: ForecastListProps) {
       </CardContent>
     </Card>
   )
-}
+})

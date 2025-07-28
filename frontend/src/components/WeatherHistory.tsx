@@ -1,5 +1,5 @@
 //"use client"
-import { useId } from "react"
+import { useId, memo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { History } from "lucide-react"
@@ -50,7 +50,7 @@ const getDisplayData = (item: SearchHistoryItem) => {
   return { temp: "N/A", description: "No description", icon: "01d" }
 }
 
-export function WeatherHistory({ history, onHistoryClick, onClearHistory, unit }: WeatherHistoryProps) {
+export const WeatherHistory = memo(({ history, onHistoryClick, onClearHistory, unit }: WeatherHistoryProps) => {
   const titleId = useId();
   return (
     <Card className="bg-white shadow-sm" role="region" aria-labelledby={titleId}>
@@ -114,4 +114,4 @@ export function WeatherHistory({ history, onHistoryClick, onClearHistory, unit }
       </CardContent>
     </Card>
   )
-}
+})

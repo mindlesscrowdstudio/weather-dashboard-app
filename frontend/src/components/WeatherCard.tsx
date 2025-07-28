@@ -1,5 +1,5 @@
-//"use client"
 
+import { memo } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Star, Droplets, Wind, Sunrise, Sunset } from "lucide-react"
@@ -32,7 +32,7 @@ const formatDate = (timestamp: number) => {
   })
 }
 
-export function WeatherCard({ weatherData, loading, error, onToggleFavorite, isFavorite, unit }: WeatherCardProps) {
+export const WeatherCard = memo(({ weatherData, loading, error, onToggleFavorite, isFavorite, unit }: WeatherCardProps) => {
   if (loading) {
     return (
       <Card className="bg-white shadow-sm">
@@ -119,4 +119,4 @@ export function WeatherCard({ weatherData, loading, error, onToggleFavorite, isF
       </CardContent>
     </Card>
   )
-}
+})
