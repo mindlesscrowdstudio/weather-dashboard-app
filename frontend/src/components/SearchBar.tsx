@@ -8,7 +8,7 @@ import type { SearchBarProps } from "@/types"
 
 export function SearchBar({ searchTerm, setSearchTerm, handleSearch, loading }: SearchBarProps) {
   return (
-    <form onSubmit={handleSearch} className="flex gap-2 mb-8">
+    <form onSubmit={handleSearch} className="flex gap-2 mb-8" aria-label="City search form">
       <div className="relative flex-1">
         <Input
           type="text"

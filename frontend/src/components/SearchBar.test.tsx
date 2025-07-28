@@ -13,7 +13,7 @@ describe("SearchBar", () => {
 
   test("should render an input and a search button", () => {
     render(<SearchBar searchTerm="" setSearchTerm={mockSetSearchTerm} handleSearch={mockHandleSearch} />)
-    expect(screen.getByPlaceholderText(/search city/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/search for a city/i)).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /search/i })).toBeInTheDocument()
   })
 
@@ -29,14 +29,14 @@ describe("SearchBar", () => {
 
   test("should call setSearchTerm on input change", () => {
     render(<SearchBar searchTerm="" setSearchTerm={mockSetSearchTerm} handleSearch={mockHandleSearch} />)
-    const input = screen.getByPlaceholderText(/search city/i)
+    const input = screen.getByLabelText(/search for a city/i)
     fireEvent.change(input, { target: { value: "Paris" } })
     expect(mockSetSearchTerm).toHaveBeenCalledWith("Paris")
   })
 
   test("should call handleSearch on form submission", () => {
     render(<SearchBar searchTerm="London" setSearchTerm={mockSetSearchTerm} handleSearch={mockHandleSearch} />)
-    const form = screen.getByRole("form")
+    const form = screen.getByRole("form", { name: /city search form/i })
     fireEvent.submit(form)
     expect(mockHandleSearch).toHaveBeenCalledTimes(1)
   })
