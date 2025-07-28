@@ -7,18 +7,18 @@ import { getFromCache } from '../utils/cacheUtility';
 
 export class WeatherController {
  
-  //Implementing the current endpoint
+  //Implementing endpoint
   public getCurrentWeather= async (req: Request, res: Response) => {
       const { city } = req.params;
       const userId = req.userId!; // Non-null assertion: middleware guarantees it exists
       
-      // 1. Check for a fresh cache entry using the utility
+      //Check for a fresh cache entry using the utility
       let weatherData = await getFromCache<WeatherData>(city, 'current_weather_data', 10);
 
-      // 2. If cache miss, fetch from API and update cache
+      
       if (!weatherData) {
         const apiData = await weatherService.fetchCurrentWeather(city);
-        // 3. Update cache with new data using UPSERT
+        //  Update cache with new data using UPSERT
         await pool.query(
           `INSERT INTO weather_cache (city_id, city_name, country_code, current_weather_data, last_updated)
           VALUES ($1, $2, $3, $4, NOW())
@@ -32,17 +32,11 @@ export class WeatherController {
         weatherData = apiData;
       }
 
-      // Type guard to ensure weatherData is defined before use.
+      
       if (!weatherData) {
-        // This should not be reachable if the API/cache logic is correct.
         throw new Error("Failed to retrieve weather data for the specified city.");
       }
-      await pool.query(
-        `INSERT INTO weather_history (user_id, city_name, country_code, weather_data) 
-         VALUES ($1, $2, $3, $4)`,
-         [userId, weatherData.name, weatherData.sys.country, JSON.stringify(weatherData)],
-      )
-      // 5. Send response
+      await this._logSearchHistory(userId, weatherData.name, weatherData.sys.country, weatherData);
       res.status(200).json(weatherData);
   }
 
@@ -68,17 +62,10 @@ export class WeatherController {
         forecastData = apiData;
       }
 
-      // Type guard to ensure forecastData is defined before use.
       if (!forecastData) {
-        // This should not be reachable if the API/cache logic is correct.
         throw new Error("Failed to retrieve forecast data for the specified city.");
       }
-      //Log forecast search to the user's history 
-      await pool.query(
-        `INSERT INTO weather_history (user_id, city_name, country_code, weather_data) 
-         VALUES ($1, $2, $3, $4)`,
-        [userId, forecastData.city.name, forecastData.city.country, JSON.stringify(forecastData)],
-      );
+      await this._logSearchHistory(userId, forecastData.city.name, forecastData.city.country, forecastData);
       res.status(200).json(forecastData);
   }
   // Implementing the addFavorite endpoint
@@ -112,7 +99,7 @@ export class WeatherController {
       const favorites: FavoriteCity[] = result.rows;
       res.status(200).json({ favorites });
   }
-  //Delete from DB
+
   public deleteFavorite = async (req: Request, res: Response) => {
       const favoriteId = Number.parseInt(req.params.id, 10);
       const userId = req.userId!;
@@ -129,7 +116,6 @@ export class WeatherController {
       if (result.rowCount === 0) {
         return res.status(404).json({ message: 'Favorite not found or does not belong to User.' });
       }
-      // Return the success message required by the test
       res.status(200).json({
         message: 'Favorite removed successfully',
         id: favoriteId,
@@ -151,9 +137,41 @@ export class WeatherController {
      history
     });
   }
-  
- 
-  
+
+  /**
+   * Logs a search to the history table, but only if the same city hasn't been searched by the same user within a defined time.
+   * 
+   */
+  private async _logSearchHistory(
+    userId: number,
+    cityName: string,
+    countryCode: string,
+    weatherData: WeatherData | ForecastData
+  ) {
+    const DUPLICATE_THRESHOLD_MINUTES = 10;
+
+    const lastSearch = await pool.query<{ searched_at: string }>(
+      `SELECT searched_at FROM weather_history
+       WHERE user_id = $1 AND city_name = $2
+       ORDER BY searched_at DESC
+       LIMIT 1`,
+      [userId, cityName]
+    );
+
+    if (lastSearch.rowCount) {
+      const lastSearchedAt = new Date(lastSearch.rows[0].searched_at);
+      const minutesSinceLastSearch = (new Date().getTime() - lastSearchedAt.getTime()) / (1000 * 60);
+
+      if (minutesSinceLastSearch < DUPLICATE_THRESHOLD_MINUTES) {
+        return; 
+      }
+    }
+
+    await pool.query(
+      `INSERT INTO weather_history (user_id, city_name, country_code, weather_data) VALUES ($1, $2, $3, $4)`,
+      [userId, cityName, countryCode, JSON.stringify(weatherData)]
+    );
+  }
 }
 
 export const weatherController = new WeatherController();//singleton
