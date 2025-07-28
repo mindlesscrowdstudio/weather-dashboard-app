@@ -4,6 +4,7 @@
 
 A full-stack weather dashboard application that uses the OpenWeatherMap API to provide real-time weather information and 5-day forecasts for cities worldwide. It features a responsive interface and a backend with user-specific data persistence.
 <!-- -->
+![image alt](dashboard_app.png).
 
 ## ✨ Features
 
@@ -60,6 +61,9 @@ backend/
 │ └── weather.test.ts
 └──
 For a visual representation of the data model, see the [Database Schema Diagram](backend/documentation/database-schema.md).
+
+Preview image of database 
+![image alt](weather-app-diagram-db.png).
 
 ### Installation
 
