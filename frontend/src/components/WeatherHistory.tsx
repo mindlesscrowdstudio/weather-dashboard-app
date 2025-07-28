@@ -6,11 +6,13 @@ import { History } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import type { SearchHistoryItem, WeatherData, ForecastData } from "@/types"
 import { WeatherIcon } from "./WeatherIcon"
+import { convertToFahrenheit } from "@/lib/temperatureConvertion"
 
 interface WeatherHistoryProps {
   history: SearchHistoryItem[]
   onHistoryClick: (city: string) => void
   onClearHistory?: () => void
+  unit: "C" | "F"
 }
 
 const formatSearchDate = (dateString: string) => {
@@ -48,7 +50,7 @@ const getDisplayData = (item: SearchHistoryItem) => {
   return { temp: "N/A", description: "No description", icon: "01d" }
 }
 
-export function WeatherHistory({ history, onHistoryClick, onClearHistory }: WeatherHistoryProps) {
+export function WeatherHistory({ history, onHistoryClick, onClearHistory, unit }: WeatherHistoryProps) {
   const titleId = useId();
   return (
     <Card className="bg-white shadow-sm" role="region" aria-labelledby={titleId}>
@@ -64,6 +66,9 @@ export function WeatherHistory({ history, onHistoryClick, onClearHistory }: Weat
             <ul className="space-y-4">
               {history.map((item) => {
                 const { temp, icon, description } = getDisplayData(item)
+                const displayTemp =
+                  typeof temp === "number" ? (unit === "F" ? convertToFahrenheit(temp) : Math.round(temp)) : temp
+
                 return (
                   <li key={item.id} className="flex justify-between items-center">
                     <div className="flex items-center gap-3">
@@ -82,9 +87,9 @@ export function WeatherHistory({ history, onHistoryClick, onClearHistory }: Weat
                     </div>
                     <div
                       className="text-lg font-bold text-gray-800 text-right"
-                      aria-label={`Temperature: ${temp} degrees Celsius. Weather: ${description}.`}
+                      aria-label={`Temperature: ${displayTemp} degrees ${unit === "F" ? "Fahrenheit" : "Celsius"}. Weather: ${description}.`}
                     >
-                      {temp}°C
+                      {displayTemp}°{unit}
                     </div>
                   </li>
                 )

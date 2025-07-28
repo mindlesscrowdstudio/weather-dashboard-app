@@ -1,9 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { ForecastData } from "@/types"
 import { WeatherIcon } from "@/components/WeatherIcon"
+import { convertToFahrenheit } from "@/lib/temperatureConvertion"
 
 interface ForecastListProps {
   forecastData: ForecastData | null
+  unit: "C" | "F"
 }
 
 const formatDate = (timestamp: number) => {
@@ -14,7 +16,7 @@ const formatDate = (timestamp: number) => {
   })
 }
 
-export function ForecastList({ forecastData }: ForecastListProps) {
+export function ForecastList({ forecastData, unit }: ForecastListProps) {
   if (!forecastData) {
     return null
   }
@@ -47,7 +49,9 @@ export function ForecastList({ forecastData }: ForecastListProps) {
             <div key={day.dt} className="flex flex-col items-center text-center p-3 rounded-lg bg-gray-50">
               <p className="text-sm font-medium text-gray-700 mb-2">{formatDate(day.dt)}</p>
               <WeatherIcon iconCode={day.weather[0].icon} className="w-8 h-8 text-orange-500 mb-2" />
-              <p className="text-lg font-bold text-gray-900 mb-1">{Math.round(day.main.temp)}°C</p>
+              <p className="text-lg font-bold text-gray-900 mb-1">
+                {unit === "F" ? convertToFahrenheit(day.main.temp) : Math.round(day.main.temp)}°{unit}
+              </p>
               <p className="text-xs text-gray-500">{day.weather[0].main}</p>
             </div>
           ))}

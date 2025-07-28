@@ -103,7 +103,7 @@ export default function WeatherDashboard() {
   const isFavorite = weatherData ? favorites.some((fav) => fav.city_name.toLowerCase() === weatherData.name.toLowerCase()) : false
 
   return (
-    // The main container is now wider (max-w-7xl). The background and padding are handled by App.tsx.
+    // The main container is now wider (max-w-7xl). 
     <div className="max-w-7xl mx-auto">
       {/* Header */}
         <header className="flex justify-between items-center mb-8">
@@ -112,11 +112,14 @@ export default function WeatherDashboard() {
             <h1 className="text-2xl font-bold text-gray-900">Weather Dashboard</h1>
           </div>
           <div className="flex items-center space-x-2">
-            <Label htmlFor="temp-unit" className={`font-semibold ${unit === "C" ? "text-blue-600" : "text-gray-500"}`}>
+            <Label htmlFor="temp-unit" className={`font-semibold ${unit === "C" ? "text-blue-600" : "text-gray-400"}`}>
               °C
             </Label>
-            <Switch id="temp-unit" checked={unit === "F"} onCheckedChange={(checked) => setUnit(checked ? "F" : "C")} />
-            <Label htmlFor="temp-unit" className={`font-semibold ${unit === "F" ? "text-blue-600" : "text-gray-500"}`}>
+            <Switch id="temp-unit" 
+            checked={unit === "F"}
+            onCheckedChange={(checked) => setUnit(checked ? "F" : "C")}
+            className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-200"/>
+            <Label htmlFor="temp-unit" className={`font-semibold ${unit === "F" ? "text-blue-600" : "text-gray-400"}`}>
               °F
             </Label>
           </div>
@@ -137,10 +140,11 @@ export default function WeatherDashboard() {
           error={error}
           onToggleFavorite={toggleFavorite}
           isFavorite={isFavorite}
+          unit={unit}
         />
 
         {/* Forecast List */}
-        <ForecastList forecastData={forecastData} />
+        <ForecastList forecastData={forecastData} unit={unit} />
 
         {/* Bottom Section - Favorites and History */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -172,7 +176,7 @@ export default function WeatherDashboard() {
           </Card>
 
           {/* Search History */}
-          <WeatherHistory history={history} onHistoryClick={handleHistoryClick} />
+          <WeatherHistory history={history} onHistoryClick={handleHistoryClick} unit={unit} />
         </div>
     </div>
   )

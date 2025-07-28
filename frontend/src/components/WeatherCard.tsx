@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Star, Droplets, Wind, Sunrise, Sunset } from "lucide-react"
 import type { WeatherData } from "@/types"
 import { WeatherIcon } from "@/components/WeatherIcon"
+import { convertToFahrenheit } from "@/lib/temperatureConvertion"
 
 interface WeatherCardProps {
   weatherData: WeatherData | null
@@ -12,6 +13,7 @@ interface WeatherCardProps {
   error?: string | null
   onToggleFavorite?: () => void
   isFavorite?: boolean
+  unit: "C" | "F"
 }
 
 const formatTime = (timestamp: number, timezone: number) => {
@@ -30,7 +32,7 @@ const formatDate = (timestamp: number) => {
   })
 }
 
-export function WeatherCard({ weatherData, loading, error, onToggleFavorite, isFavorite }: WeatherCardProps) {
+export function WeatherCard({ weatherData, loading, error, onToggleFavorite, isFavorite, unit }: WeatherCardProps) {
   if (loading) {
     return (
       <Card className="bg-white shadow-sm">
@@ -81,9 +83,13 @@ export function WeatherCard({ weatherData, loading, error, onToggleFavorite, isF
           <div className="flex items-center gap-4">
             <WeatherIcon iconCode={weatherData.weather[0].icon} className="w-12 h-12 text-orange-500" />
             <div>
-              <p className="text-4xl font-bold text-gray-900">{Math.round(weatherData.main.temp)}°C</p>
+              <p className="text-4xl font-bold text-gray-900">
+                {unit === "F" ? convertToFahrenheit(weatherData.main.temp) : Math.round(weatherData.main.temp)}°{unit}
+              </p>
               <p className="text-sm text-gray-500 mt-1">{weatherData.weather[0].description}</p>
-              <p className="text-sm text-gray-500">Feels like {Math.round(weatherData.main.feels_like)}°C</p>
+              <p className="text-sm text-gray-500">
+                Feels like {unit === "F" ? convertToFahrenheit(weatherData.main.feels_like) : Math.round(weatherData.main.feels_like)}°{unit}
+              </p>
             </div>
           </div>
           <div className="text-right">
