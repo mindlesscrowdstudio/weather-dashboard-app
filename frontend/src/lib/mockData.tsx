@@ -39,11 +39,31 @@ export const mockForecastData: ForecastData = {
     country: "GB",
   },
   list: [
-    { dt: 1661871600, main: { temp: 16.2 }, weather: [{ main: "Clouds" }] },
-    { dt: 1661958000, main: { temp: 18.5 }, weather: [{ main: "Clear" }] },
-    { dt: 1662044400, main: { temp: 17.1 }, weather: [{ main: "Clouds" }] },
-    { dt: 1662130800, main: { temp: 14.8 }, weather: [{ main: "Rain" }] },
-    { dt: 1662217200, main: { temp: 15.3 }, weather: [{ main: "Clouds" }] },
+    {
+      dt: 1661871600,
+      main: { temp: 16.2 },
+      weather: [{ id: 803, main: "Clouds", description: "scattered clouds", icon: "04d" }],
+    },
+    {
+      dt: 1661958000,
+      main: { temp: 18.5 },
+      weather: [{ id: 800, main: "Clear", description: "clear sky", icon: "01d" }],
+    },
+    {
+      dt: 1662044400,
+      main: { temp: 17.1 },
+      weather: [{ id: 803, main: "Clouds", description: "broken clouds", icon: "04d" }],
+    },
+    {
+      dt: 1662130800,
+      main: { temp: 14.8 },
+      weather: [{ id: 500, main: "Rain", description: "light rain", icon: "10d" }],
+    },
+    {
+      dt: 1662217200,
+      main: { temp: 15.3 },
+      weather: [{ id: 802, main: "Clouds", description: "scattered clouds", icon: "03d" }],
+    },
   ],
 }
 
