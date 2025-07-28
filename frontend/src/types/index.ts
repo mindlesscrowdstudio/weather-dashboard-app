@@ -46,7 +46,10 @@ export interface ForecastData {
       temp: number;
     };
     weather: {
+      id: number;
       main: string;
+      description: string;
+      icon: string;
     }[];
   }[];
 }
@@ -56,13 +59,14 @@ export interface FavoriteCity {
   user_id: number;
   city_name: string;
   country_code: string;
-  added_at: Date;
+  added_at: string;
 }
 
 export interface SearchHistoryItem {
   id: number;
+  user_id: number;
   city_name: string;
   country_code: string;
-  searched_at: Date;
+  searched_at: string;
   weather_data: WeatherData | ForecastData;
 }

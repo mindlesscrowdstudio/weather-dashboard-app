@@ -1,13 +1,9 @@
 @import "tailwindcss";
-/* :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+
+/*
+  This prevents layout shifts when content causes a scrollbar to appear.
+  By forcing the scrollbar to always be visible, the content area width remains stable.
+*/
 html {
-  box-sizing: border-box;
-  padding: 0;
+  overflow-y: scroll;
 }
- */
