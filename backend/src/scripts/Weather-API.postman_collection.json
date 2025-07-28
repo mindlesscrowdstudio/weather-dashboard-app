@@ -1,0 +1,245 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+		"name": "Weather Dashboard API",
+		"description": "A collection of requests for the Weather Dashboard backend application.\n\n**Prerequisites:**\n1. Make sure your backend server is running (`npm run dev`).\n2. Create a test user in your PostgreSQL database:\n   `INSERT INTO users (username) VALUES ('postman_tester') RETURNING id;`\n3. In the collection's 'Variables' tab, set the `userId` to the ID returned by the SQL command.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12345678"
+	},
+	"item": [
+		{
+			"name": "System Health",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Checks the operational status of the server and its database connection. Does not require authentication."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for checking the system's status."
+		},
+		{
+			"name": "Weather & Forecast",
+			"item": [
+				{
+					"name": "Get Current Weather",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-user-id",
+								"value": "{{userId}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/weather/current/{{city}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"weather",
+								"current",
+								"{{city}}"
+							]
+						},
+						"description": "Fetches the current weather for a specified city. The city can be changed in the collection variables."
+					},
+					"response": []
+				},
+				{
+					"name": "Get 5-Day Forecast",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-user-id",
+								"value": "{{userId}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/weather/forecast/{{city}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"weather",
+								"forecast",
+								"{{city}}"
+							]
+						},
+						"description": "Fetches the 5-day weather forecast for a specified city. The city can be changed in the collection variables."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for retrieving weather data."
+		},
+		{
+			"name": "User Favorites",
+			"item": [
+				{
+					"name": "Add Favorite City",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-user-id",
+								"value": "{{userId}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"city_name\": \"Kyoto\",\n    \"country_code\": \"JP\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/weather/favorites",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"weather",
+								"favorites"
+							]
+						},
+						"description": "Adds a city to the current user's list of favorites."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Favorites",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-user-id",
+								"value": "{{userId}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/weather/favorites",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"weather",
+								"favorites"
+							]
+						},
+						"description": "Retrieves the list of all favorite cities for the current user."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Favorite City",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "x-user-id",
+								"value": "{{userId}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/weather/favorites/{{favoriteId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"weather",
+								"favorites",
+								"{{favoriteId}}"
+							]
+						},
+						"description": "Removes a specific favorite city by its unique ID. \n\n**Note:** First, add a favorite to get its ID, then update the `favoriteId` collection variable before running this request."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for managing a user's favorite cities."
+		},
+		{
+			"name": "User History",
+			"item": [
+				{
+					"name": "Get Search History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-user-id",
+								"value": "{{userId}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/weather/history",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"weather",
+								"history"
+							]
+						},
+						"description": "Retrieves the last 10 weather searches made by the user. \n\n**Note:** You must first make a few calls to the `current` or `forecast` endpoints to generate some history."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoint for retrieving user search history."
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "1",
+			"type": "string",
+			"description": "The ID of the test user. Change this to match the user in your database."
+		},
+		{
+			"key": "city",
+			"value": "London",
+			"type": "string"
+		},
+		{
+			"key": "favoriteId",
+			"value": "1",
+			"type": "string",
+			"description": "The ID of a favorite city to be deleted."
+		}
+	]
+}

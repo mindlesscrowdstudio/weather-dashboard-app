@@ -1,5 +1,8 @@
-import express from 'express';
+//import dotenv from 'dotenv';
 
+//dotenv.config();
+import express from 'express';
+import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import weatherRoutes from './routes/weather';
@@ -9,6 +12,16 @@ import { errorHandler } from './middleware/errorHandler';
 const app = express();
 // Add security headers
 app.use(helmet());
+//enable cors
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  optionsSuccessStatus: 200,
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id'],
+  credentials:true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+};
+app.use(cors(corsOptions));
+// Log requests
 app.use(morgan('dev'));
 // Parse JSON request bodies
 // Middleware to parse JSON bodies POST/PUT bodies
@@ -20,7 +33,7 @@ app.use('/health', healthRoutes);
 app.use('/api/weather', weatherRoutes);
 
 // Middleware centralized error.
-// By placing it last, it catches all errors from the preceding routes.
+// putting at last, it catches all errors from the preceding routes.
 app.use(errorHandler);
 
 export default app;

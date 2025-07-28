@@ -10,6 +10,6 @@
     "types":["jest"], 
   },
   
-  "include": ["src/**/*", "tests/**/*"], // <-- Make sure to include your tests folder
+  "include": ["src/**/*", "tests/**/*"], 
   "exclude": ["node_modules", "dist"]
 }
