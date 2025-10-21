@@ -114,7 +114,7 @@ Connect to your PostgreSQL instance and run the SQL script to create the necessa
     ```
     Create and update the `frontend/.env.local` file with the backend URL:
     ```env
-    VITE_API_BASE_URL=http://localhost:5000/api
+    VITE_API_BASE_URL=http://localhost:3001/api
     ```
 
 ### Running the Application

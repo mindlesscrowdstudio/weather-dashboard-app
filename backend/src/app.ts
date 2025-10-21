@@ -29,6 +29,11 @@ app.use(express.json());
 // health check endpoint - before any auth middleware
 app.use('/health', healthRoutes);
 
+// Welcome route
+app.get('/', (req, res) => {
+  res.json({ message: 'Welcome to the Weather Dashboard API!' });
+});
+
 // All API routes are handled here
 app.use('/api/weather', weatherRoutes);
 

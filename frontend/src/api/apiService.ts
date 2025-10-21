@@ -2,7 +2,7 @@
 import axios, { type AxiosResponse } from 'axios';
 import type { WeatherData, ForecastData, FavoriteCity, SearchHistoryItem } from "@/types";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
 
 // For this project, we'll hardcode the user ID. In a real app, this would
 // come from an authentication context.
@@ -28,7 +28,7 @@ const handleError = (error: any) => {
   } else if (error.request) {
     // Request was made but no response received
     console.error('Network Error:', error.request);
-    throw new Error('Network error: Unable to connect to server. Make sure the backend is running on port 5000.');
+    throw new Error('Network error: Unable to connect to server. Make sure the backend is running on port 3001.');
   } else {
     // Something else happened
     console.error('Error:', error.message);

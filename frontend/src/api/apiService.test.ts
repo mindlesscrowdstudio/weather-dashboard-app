@@ -103,7 +103,7 @@ describe('apiService', () => {
       mockApiClient.get.mockRejectedValue({ request: {} });
 
       await expect(apiService.getCurrentWeather('AnyCity')).rejects.toThrow(
-        'Network error: Unable to connect to server. Make sure the backend is running on port 5000.'
+        'Network error: Unable to connect to server. Make sure the backend is running on port 3001.'
       );
     });
 

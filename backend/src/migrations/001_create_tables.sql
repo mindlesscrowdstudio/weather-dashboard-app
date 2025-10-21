@@ -4,6 +4,9 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(50) UNIQUE NOT NULL
 );
 
+-- Insert demo user for development
+INSERT INTO users (id, username) VALUES (2, 'demo-user') ON CONFLICT (id) DO NOTHING;
+
 -- FAVORITE CITIES - Stores the list of favorite cities for each user.
 CREATE TABLE IF NOT EXISTS favorite_cities (
 	id SERIAL PRIMARY KEY,
