@@ -20,7 +20,16 @@ services:
     # This creates a "volume" to persist your data even if you stop and restart the container.
     volumes:
       - postgres-data:/var/lib/postgresql/data
+  # This is our new Redis cache service
+  redis-cache:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-data:/data
 
 # This defines the named volume we used above.
 volumes:
   postgres-data:
+  redis-data:

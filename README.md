@@ -13,7 +13,7 @@ A full-stack weather dashboard application that uses the OpenWeatherMap API to p
 - **Favorites**: Logged-in users can save, view, and remove their favorite cities.
 - **Search History**: Automatically tracks the last 10 unique cities searched by a user.
 - **Temperature Units**: Switch between Celsius and Fahrenheit.
-- **API Caching**: Backend caching with PostgreSQL to reduce redundant API calls and improve performance.
+- **API Caching**: High-speed backend caching with Redis to reduce latency and minimize external API calls.
 - **Responsive Design**: A clean, mobile-first design that scales to desktop screens.
 - **Accessibility**: Implementation of ARIA roles and labels for an enhanced user experience.
 
@@ -21,8 +21,9 @@ A full-stack weather dashboard application that uses the OpenWeatherMap API to p
 
 | Area           | Technology                                                      |
 | :------------- | :-------------------------------------------------------------- |
-| **Frontend**   | [React], [Tailwind CSS], [shadcn/ui](https://ui.shadcn.com/)    |
-| **Backend**    | [Node.js], [Express], [TypeScript], [PostgreSQL]                |
+| **Frontend**   | [React], [Tailwind CSS], [shadcn/ui]                            |
+| **Backend**    | [Node.js], [Express], [TypeScript], [PostgreSQL], [Redis]       |
+| **Container**  | [Docker]                                                        |
 | **Testing**    | [Vitest] & [React Testing Library] (Frontend), [Jest] (Backend) |
 | **Deployment** | [Vercel] (Frontend), [Render] (Backend & Database)              |
 
@@ -30,8 +31,8 @@ A full-stack weather dashboard application that uses the OpenWeatherMap API to p
 
 - Node.js (v24.3.0)
 - npm
+- Docker & Docker Compose
 - OpenWeatherMap API key
-- PostgreSQL instance
 
 ## 🏗️ Architecture
 
@@ -72,33 +73,36 @@ Preview image of database
    https://github.com/mindlesscrowdstudio/weather-dashboard-app
    cd weather-dashboard-app
    ```
-2. **Backend Setup**
+
+2. **Set Up Environment Variables**
+   - **Backend**: Create a `.env` file in the `/backend` directory. You can copy the contents from `.env.example` if it exists.
+     ```env
+     # Connects to the PostgreSQL container defined in docker-compose.yml
+     DATABASE_URL="postgresql://mel:tofu@localhost:5432/weatherapp"
+     # Connects to the Redis container
+     REDIS_URL="redis://localhost:6379"
+     
+     OPENWEATHER_API_KEY="your_openweathermap_api_key"
+     FRONTEND_URL="http://localhost:5173"
+     ```
+   - **Frontend**: Create a `.env.local` file in the `/frontend` directory.
+     ```env
+     VITE_API_BASE_URL=http://localhost:5000/api
+     ```
+
+3. **Start Development Services**
+   Use Docker Compose to start the PostgreSQL database and Redis cache.
    ```bash
-   # Navigate to the backend directory
-   cd backend
+   docker-compose up -d
    ```
 
-# Install dependencies
-
-npm install
-
-# Create a .env file and add your environment variables
-
-# You can copy from a .env.example
-
-````
-Create and update the `backend/.env` file with your credentials:
-```env
-DATABASE_URL="postgresql://YOUR_DB_USER:YOUR_DB_PASSWORD@localhost:5432/weather_dashboard"
-OPENWEATHER_API_KEY="your_openweathermap_api_key"
-FRONTEND_URL="http://localhost:5173"
-````
-
-**Run Database Migrations**:
-Connect to your PostgreSQL instance and run the SQL script to create the necessary tables.
-`bash
-    psql -U YOUR_DB_USER -d weather_dashboard -f src/migrations/001_create_tables.sql
-    ` 3. **Frontend Setup**
+4. **Install Dependencies & Set Up Database**
+   In separate terminals, navigate to the `backend` and `frontend` directories and install their dependencies.
+   ```bash
+   # In /backend directory
+   npm install
+   npm run db:setup # This runs the SQL migrations for you
+   ```
 ```bash
 
 # Navigate to the frontend directory from the root
