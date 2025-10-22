@@ -2,53 +2,72 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import "@testing-library/jest-dom";
 import { describe, test, expect, beforeEach, vi } from "vitest"
 import { SearchBar } from '@/components/SearchBar';
+import type { SearchBarProps } from '@/types';
+
+const setup = (props: Partial<SearchBarProps> = {}) => {
+  const defaultProps: SearchBarProps = {
+    searchTerm: 'London',
+    setSearchTerm: vi.fn(),
+    handleSearch: vi.fn((e) => e.preventDefault()),
+    loading: false,
+  };
+  const view = render(<SearchBar {...defaultProps} {...props} />);
+  return { ...view, props: { ...defaultProps, ...props } };
+};
 
 describe("SearchBar", () => {
-  const mockSetSearchTerm = vi.fn()
-  const mockHandleSearch = vi.fn((e) => e.preventDefault())
-
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  test("should render an input and a search button", () => {
-    render(<SearchBar searchTerm="" setSearchTerm={mockSetSearchTerm} handleSearch={mockHandleSearch} />)
-    expect(screen.getByLabelText(/search for a city/i)).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: /search/i })).toBeInTheDocument()
-  })
+  describe('Initial Render', () => {
+    test("should render an input and a search button", () => {
+      setup({ searchTerm: '' });
+      expect(screen.getByLabelText(/search for a city/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /search/i })).toBeInTheDocument();
+    });
 
-  test("should disable the search button when the input is empty", () => {
-    render(<SearchBar searchTerm=" " setSearchTerm={mockSetSearchTerm} handleSearch={mockHandleSearch} />)
-    expect(screen.getByRole("button", { name: /search/i })).toBeDisabled()
-  })
+    test("should disable the search button when the input is empty or whitespace", () => {
+      setup({ searchTerm: '   ' });
+      expect(screen.getByRole("button", { name: /search/i })).toBeDisabled();
+    });
 
-  test("should enable the search button when the input has text", () => {
-    render(<SearchBar searchTerm="London" setSearchTerm={mockSetSearchTerm} handleSearch={mockHandleSearch} />)
-    expect(screen.getByRole("button", { name: /search/i })).toBeEnabled()
-  })
+    test("should enable the search button when the input has text", () => {
+      setup();
+      expect(screen.getByRole("button", { name: /search/i })).toBeEnabled();
+    });
+  });
 
-  test("should call setSearchTerm on input change", () => {
-    render(<SearchBar searchTerm="" setSearchTerm={mockSetSearchTerm} handleSearch={mockHandleSearch} />)
-    const input = screen.getByLabelText(/search for a city/i)
-    fireEvent.change(input, { target: { value: "Paris" } })
-    expect(mockSetSearchTerm).toHaveBeenCalledWith("Paris")
-  })
+  describe('User Interaction', () => {
+    test("should call setSearchTerm on input change", () => {
+      const { props } = setup({ searchTerm: '' });
+      const input = screen.getByLabelText(/search for a city/i);
+      fireEvent.change(input, { target: { value: "Paris" } });
+      expect(props.setSearchTerm).toHaveBeenCalledWith("Paris");
+    });
 
-  test("should call handleSearch on form submission", () => {
-    render(<SearchBar searchTerm="London" setSearchTerm={mockSetSearchTerm} handleSearch={mockHandleSearch} />)
-    const form = screen.getByRole("form", { name: /city search form/i })
-    fireEvent.submit(form)
-    expect(mockHandleSearch).toHaveBeenCalledTimes(1)
-  })
+    test("should call handleSearch when the search button is clicked", () => {
+      const { props } = setup();
+      const button = screen.getByRole("button", { name: /search/i });
+      fireEvent.click(button);
+      expect(props.handleSearch).toHaveBeenCalledTimes(1);
+    });
 
-  test("should show loading state when loading prop is true", () => {
-    render(<SearchBar searchTerm="London" setSearchTerm={mockSetSearchTerm} handleSearch={mockHandleSearch} loading={true} />)
+    test("should call handleSearch when Enter is pressed in the input", () => {
+      const { props } = setup();
+      const input = screen.getByLabelText(/search for a city/i);
+      fireEvent.keyDown(input, { key: 'Enter', code: 'Enter', charCode: 13 });
+      // Note: Pressing Enter on an input inside a form triggers the form's submit event.
+      expect(props.handleSearch).toHaveBeenCalledTimes(1);
+    });
+  });
 
-    // When loading, the button text changes, so we find it by its new text.
-    const searchButton = screen.getByRole("button", { name: /searching/i })
-
-    // Check that the button is disabled and displays the correct loading text.
-    expect(searchButton).toBeDisabled()
-    expect(searchButton).toHaveTextContent("Searching...")
-  })
-})
+  describe('Loading State', () => {
+    test("should show loading state when loading prop is true", () => {
+      setup({ loading: true });
+      const searchButton = screen.getByRole("button", { name: /searching/i });
+      expect(searchButton).toBeDisabled();
+      expect(searchButton).toHaveTextContent("Searching...");
+    });
+  });
+});
