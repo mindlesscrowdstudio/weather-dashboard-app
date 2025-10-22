@@ -72,7 +72,7 @@ export const WeatherHistory = memo(({ history, onHistoryClick, onClearHistory, u
                 return (
                   <li key={item.id} className="flex justify-between items-center">
                     <div className="flex items-center gap-3">
-                      <WeatherIcon iconCode={icon} className="w-8 h-8 text-gray-500" />
+                      <WeatherIcon iconCode={icon} className="w-8 h-8 text-gray-600" />
                       <div>
                         <Button
                           variant="ghost"

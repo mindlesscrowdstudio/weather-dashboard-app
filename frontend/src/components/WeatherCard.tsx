@@ -104,12 +104,12 @@ export const WeatherCard = memo(({ weatherData, loading, error, onToggleFavorite
             <span>Humidity: {weatherData.main.humidity}%</span>
           </div>
           <div className="flex items-center gap-2">
-            <Wind className="w-4 h-4 text-gray-500" />
+            <Wind className="w-4 h-4 text-gray-900" />
             <span>Wind: {weatherData.wind.speed} m/s</span>
           </div>
           <div className="flex items-center gap-2">
             <Sunrise className="w-4 h-4 text-yellow-500" />
-            <span className="text-gray-600">Sunrise: {formatTime(weatherData.sys.sunrise, weatherData.timezone)}</span>
+            <span className="text-white">Sunrise: {formatTime(weatherData.sys.sunrise, weatherData.timezone)}</span>
           </div>
           <div className="flex items-center gap-2">
             <Sunset className="w-4 h-4 text-orange-600" />
