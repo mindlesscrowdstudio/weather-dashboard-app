@@ -35,9 +35,9 @@ const formatDate = (timestamp: number) => {
 export const WeatherCard = memo(({ weatherData, loading, error, onToggleFavorite, isFavorite, unit }: WeatherCardProps) => {
   if (loading) {
     return (
-      <Card className="bg-white shadow-sm">
+      <Card className="bg-white/20 backdrop-blur-lg rounded-2xl shadow-lg border border-white/30 mb-6 text-white">
         <CardContent className="p-6 text-center">
-          <p className="text-gray-500">Loading weather...</p>
+          <p className="text-white/80">Loading weather...</p>
         </CardContent>
       </Card>
     )
@@ -45,8 +45,8 @@ export const WeatherCard = memo(({ weatherData, loading, error, onToggleFavorite
 
   if (error) {
     return (
-      <Card className="bg-white shadow-sm">
-        <CardContent className="p-6 text-center text-red-500">
+      <Card className="bg-white/20 backdrop-blur-lg rounded-2xl shadow-lg border border-white/30 mb-6 text-white">
+        <CardContent className="p-6 text-center text-red-300">
           <p>Error: {error}</p>
         </CardContent>
       </Card>
@@ -55,8 +55,8 @@ export const WeatherCard = memo(({ weatherData, loading, error, onToggleFavorite
 
   if (!weatherData) {
     return (
-      <Card className="bg-white shadow-sm">
-        <CardContent className="p-6 text-center text-gray-500">
+      <Card className="bg-white/20 backdrop-blur-lg rounded-2xl shadow-lg border border-white/30 mb-6 text-white">
+        <CardContent className="p-6 text-center text-white/80">
           <p>Search for a city to see the weather.</p>
         </CardContent>
       </Card>
@@ -64,16 +64,16 @@ export const WeatherCard = memo(({ weatherData, loading, error, onToggleFavorite
   }
 
   return (
-    <Card className="bg-white shadow-sm mb-6">
+    <Card className="bg-white/20 backdrop-blur-lg rounded-2xl shadow-lg border border-white/30 mb-6 text-white">
       <CardContent className="p-6">
         {/* City name and star */}
         <div className="flex justify-between items-start mb-4">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-2xl font-medium">
               {weatherData.name} ({weatherData.sys.country})
             </h2>
           </div>
-          <Button variant="ghost" size="icon" onClick={onToggleFavorite} className="h-8 w-8">
+          <Button variant="ghost" size="icon" onClick={onToggleFavorite} className="h-8 w-8 text-white hover:bg-white/20">
             <Star className={`w-5 h-5 ${isFavorite ? "text-yellow-400 fill-current" : "text-gray-400"}`} />
           </Button>
         </div>
@@ -83,17 +83,17 @@ export const WeatherCard = memo(({ weatherData, loading, error, onToggleFavorite
           <div className="flex items-center gap-4">
             <WeatherIcon iconCode={weatherData.weather[0].icon} className="w-12 h-12 text-orange-500" />
             <div>
-              <p className="text-4xl font-bold text-gray-900">
+              <p className="text-7xl font-thin tracking-tighter">
                 {unit === "F" ? convertToFahrenheit(weatherData.main.temp) : Math.round(weatherData.main.temp)}°{unit}
               </p>
-              <p className="text-sm text-gray-500 mt-1">{weatherData.weather[0].description}</p>
-              <p className="text-sm text-gray-500">
+              <p className="text-lg capitalize mt-1">{weatherData.weather[0].description}</p>
+              <p className="text-sm">
                 Feels like {unit === "F" ? convertToFahrenheit(weatherData.main.feels_like) : Math.round(weatherData.main.feels_like)}°{unit}
               </p>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-sm text-gray-500">{formatDate(weatherData.dt)}</p>
+            <p className="text-sm">{formatDate(weatherData.dt)}</p>
           </div>
         </div>
 
@@ -101,11 +101,11 @@ export const WeatherCard = memo(({ weatherData, loading, error, onToggleFavorite
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="flex items-center gap-2">
             <Droplets className="w-4 h-4 text-blue-400" />
-            <span className="text-gray-600">Humidity: {weatherData.main.humidity}%</span>
+            <span>Humidity: {weatherData.main.humidity}%</span>
           </div>
           <div className="flex items-center gap-2">
             <Wind className="w-4 h-4 text-gray-500" />
-            <span className="text-gray-600">Wind: {weatherData.wind.speed} m/s</span>
+            <span>Wind: {weatherData.wind.speed} m/s</span>
           </div>
           <div className="flex items-center gap-2">
             <Sunrise className="w-4 h-4 text-yellow-500" />
@@ -113,7 +113,7 @@ export const WeatherCard = memo(({ weatherData, loading, error, onToggleFavorite
           </div>
           <div className="flex items-center gap-2">
             <Sunset className="w-4 h-4 text-orange-600" />
-            <span className="text-gray-600">Sunset: {formatTime(weatherData.sys.sunset, weatherData.timezone)}</span>
+            <span>Sunset: {formatTime(weatherData.sys.sunset, weatherData.timezone)}</span>
           </div>
         </div>
       </CardContent>

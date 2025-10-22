@@ -40,17 +40,17 @@ export const ForecastList = memo(({ forecastData, unit }: ForecastListProps) => 
   ).slice(0, 5); // show maximum of 5 days.
 
   return (
-    <Card className="bg-white shadow-sm mb-6">
+    <Card className="bg-white/20 backdrop-blur-lg rounded-2xl shadow-lg border border-white/30 mb-6 text-white">
       <CardHeader className="pb-4">
-        <CardTitle className="text-lg font-semibold text-gray-900">5-Day Forecast</CardTitle>
+        <CardTitle className="text-lg font-semibold">5-Day Forecast</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
           {dailyForecasts.map((day) => (
-            <div key={day.dt} className="flex flex-col items-center text-center p-3 rounded-lg bg-gray-50">
-              <p className="text-sm font-medium text-gray-700 mb-2">{formatDate(day.dt)}</p>
+            <div key={day.dt} className="flex flex-col items-center text-center p-3 rounded-lg bg-white/10">
+              <p className="text-sm font-medium mb-2">{formatDate(day.dt)}</p>
               <WeatherIcon iconCode={day.weather[0].icon} className="w-8 h-8 text-orange-500 mb-2" />
-              <p className="text-lg font-bold text-gray-900 mb-1">
+              <p className="text-lg font-bold mb-1">
                 {unit === "F" ? convertToFahrenheit(day.main.temp) : Math.round(day.main.temp)}°{unit}
               </p>
               <p className="text-xs text-gray-500">{day.weather[0].main}</p>

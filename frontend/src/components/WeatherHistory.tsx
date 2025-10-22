@@ -53,10 +53,10 @@ const getDisplayData = (item: SearchHistoryItem) => {
 export const WeatherHistory = memo(({ history, onHistoryClick, onClearHistory, unit }: WeatherHistoryProps) => {
   const titleId = useId();
   return (
-    <Card className="bg-white shadow-sm" role="region" aria-labelledby={titleId}>
+    <Card className="bg-white/20 backdrop-blur-lg rounded-2xl shadow-lg border border-white/30 text-white" role="region" aria-labelledby={titleId}>
       <CardHeader className="pb-4" >
-        <CardTitle id={titleId} className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-          <History className="w-5 h-5 text-gray-500" />
+        <CardTitle id={titleId} className="flex items-center gap-2 text-lg font-semibold">
+          <History className="w-5 h-5 text-gray-200" />
           Search History
         </CardTitle>
       </CardHeader>
@@ -75,18 +75,18 @@ export const WeatherHistory = memo(({ history, onHistoryClick, onClearHistory, u
                       <WeatherIcon iconCode={icon} className="w-8 h-8 text-gray-500" />
                       <div>
                         <Button
-                          variant="link"
-                          className="text-left p-0 h-auto text-base font-semibold text-gray-800 hover:text-blue-600 no-underline hover:underline"
+                          variant="ghost"
+                          className="text-left p-0 h-auto text-lg font-semibold text-white hover:text-blue-200 hover:bg-transparent"
                           onClick={() => onHistoryClick(item.city_name)}
                           aria-label={`View weather for ${item.city_name}, ${item.country_code}`}
                         >
                           {item.city_name}, {item.country_code}
                         </Button>
-                        <p className="text-xs text-gray-500">{formatSearchDate(item.searched_at)}</p>
+                        <p className="text-xs text-gray-300">{formatSearchDate(item.searched_at)}</p>
                       </div>
                     </div>
                     <div
-                      className="text-lg font-bold text-gray-800 text-right"
+                      className="text-lg font-bold text-right"
                       aria-label={`Temperature: ${displayTemp} degrees ${unit === "F" ? "Fahrenheit" : "Celsius"}. Weather: ${description}.`}
                     >
                       {displayTemp}°{unit}
@@ -109,7 +109,7 @@ export const WeatherHistory = memo(({ history, onHistoryClick, onClearHistory, u
             </ul>
           </ScrollArea>
         ) : (
-          <p className="text-sm text-gray-500">Your search history is empty.</p>
+          <p className="text-sm text-gray-200">Your search history is empty.</p>
         )}
       </CardContent>
     </Card>

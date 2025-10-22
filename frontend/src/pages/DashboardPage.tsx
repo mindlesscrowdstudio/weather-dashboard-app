@@ -13,9 +13,14 @@ import { WeatherHistory } from "@/components/WeatherHistory"
 import { apiService } from "@/api/apiService"
 import type { WeatherData, ForecastData, SearchHistoryItem, FavoriteCity } from "@/types"
 
-export default function WeatherDashboard() {
+interface WeatherDashboardProps {
+  onWeatherUpdate: (weatherData: WeatherData | null) => void;
+}
+
+export default function WeatherDashboard({ onWeatherUpdate }: WeatherDashboardProps) {
   const [searchTerm, setSearchTerm] = useState("London")
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null)
+
   const [forecastData, setForecastData] = useState<ForecastData | null>(null)
   const [favorites, setFavorites] = useState<FavoriteCity[]>([])
   const [history, setHistory] = useState<SearchHistoryItem[]>([])
@@ -49,6 +54,7 @@ export default function WeatherDashboard() {
     try {
       const [weather, forecast] = await Promise.all([apiService.getCurrentWeather(city), apiService.getForecast(city)])
       setWeatherData(weather)
+      onWeatherUpdate(weather); // Pass the new weather data up to the App component
       setForecastData(forecast)
       fetchHistory()
     } catch (err) {
@@ -58,11 +64,12 @@ export default function WeatherDashboard() {
         setError("An unknown error occurred.")
       }
       setWeatherData(null)
+      onWeatherUpdate(null); // Clear weather data on error
       setForecastData(null)
     } finally {
       setLoading(false)
     }
-  }, [fetchHistory])
+  }, [fetchHistory, onWeatherUpdate])
 
   // Initial data fetch when the component mounts
   useEffect(() => {
@@ -131,19 +138,19 @@ export default function WeatherDashboard() {
     <div className="max-w-7xl mx-auto">
       {/* Header */}
         <header className="flex justify-between items-center mb-8">
-          <div className="flex items-center gap-2">
-            <Cloud className="w-8 h-8 text-blue-500" />
-            <h1 className="text-2xl font-bold text-gray-900">Weather Dashboard</h1>
+          <div className="flex items-center gap-3">
+            <Cloud className="w-8 h-8 text-white/90" />
+            <h1 className="text-2xl font-bold tracking-tight">Weather Dashboard</h1>
           </div>
           <div className="flex items-center space-x-2">
-            <Label htmlFor="temp-unit" className={`font-semibold ${unit === "C" ? "text-blue-600" : "text-gray-400"}`}>
+            <Label htmlFor="temp-unit" className={`font-semibold transition-colors ${unit === "C" ? "text-white" : "text-white/50"}`}>
               °C
             </Label>
             <Switch id="temp-unit" 
             checked={unit === "F"}
             onCheckedChange={(checked) => setUnit(checked ? "F" : "C")}
-            className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-200"/>
-            <Label htmlFor="temp-unit" className={`font-semibold ${unit === "F" ? "text-blue-600" : "text-gray-400"}`}>
+            />
+            <Label htmlFor="temp-unit" className={`font-semibold transition-colors ${unit === "F" ? "text-white" : "text-white/50"}`}>
               °F
             </Label>
           </div>
@@ -173,10 +180,10 @@ export default function WeatherDashboard() {
         {/* Bottom Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Favorite Cities */}
-          <Card className="bg-white shadow-sm">
+          <Card className="bg-white/20 backdrop-blur-lg rounded-2xl shadow-lg border border-white/30 text-white">
             <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-                <Star className="w-5 h-5 text-yellow-400" />
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                <Star className="w-5 h-5 text-yellow-300" />
                 Favorite Cities
               </CardTitle>
             </CardHeader>
@@ -186,15 +193,15 @@ export default function WeatherDashboard() {
                   {favorites.map((city) => (
                     <button
                       key={city.id}
-                      onClick={() => handleHistoryClick(city.city_name)}
-                      className="text-gray-700 hover:text-blue-600 hover:underline w-full text-left"
+                      onClick={() => handleHistoryClick(city.city_name)} // Use handleHistoryClick to fetch data
+                      className="text-white hover:text-blue-200 hover:underline w-full text-left text-lg"
                     >
                       {city.city_name}
                     </button>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-gray-500">No favorite cities yet. Star a city to add it here.</p>
+                <p className="text-sm text-gray-200">No favorite cities yet. Star a city to add it here.</p>
               )}
             </CardContent>
           </Card>
