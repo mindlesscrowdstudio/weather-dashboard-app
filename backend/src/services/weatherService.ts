@@ -23,7 +23,7 @@ export const handleAPIError = (error:any) => {
   }
 }
 
-// create a class to encapsulate the API calls
+// create a class to encapsulate the API calls #Encapsulation pattern
 class WeatherService {
   async fetchCurrentWeather(city: string) {
     try {
@@ -45,7 +45,8 @@ class WeatherService {
       throw handleAPIError(error);
     }
   }
+  // For Devs: The final request sent to the OpenWeatherMap server looks like this: https://api.openweathermap.org/data/2.5/forecast?q=London&appid=YOUR_API_KEY&units=metric
 
 }
-//Export a singleton instance of the service
+
 export const weatherService = new WeatherService();

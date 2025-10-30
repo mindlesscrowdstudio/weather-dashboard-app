@@ -13,7 +13,8 @@ export class WeatherController {
     try {
       const { city } = req.params;
       const userId = req.userId!;
-      const cacheKey = `weather:current:${city.toLowerCase()}`;
+      //to store and retrieve data from Redis.
+      const cacheKey = `weather:current:${city.toLowerCase()}`; 
 
       // Gracefully handle cache checks
       try {
@@ -28,9 +29,9 @@ export class WeatherController {
       } catch (cacheError) {
         console.error('Redis GET or JSON.parse error. Proceeding as cache miss.', cacheError);
       }
-
+      // Fetch from External API Cache miss scenario
       const weatherData = await weatherService.fetchCurrentWeather(city);
-      await redisClient.set(cacheKey, JSON.stringify(weatherData), 'EX', CACHE_EXPIRATION_SECONDS);
+      await redisClient.set(cacheKey, JSON.stringify(weatherData), 'EX', CACHE_EXPIRATION_SECONDS); //tells Redis to auto expire and delete this cached entry after 1hour
 
       await this._logSearchHistory(userId, weatherData.name, weatherData.sys.country, weatherData);
       res.status(200).json(weatherData);
@@ -185,4 +186,4 @@ export class WeatherController {
   }
 }
 
-export const weatherController = new WeatherController();//singleton
+export const weatherController = new WeatherController();
